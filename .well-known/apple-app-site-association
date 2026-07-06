@@ -5,8 +5,12 @@
         "appIDs": ["YLT8FWVXBN.com.bondcodes.PodcastApp"],
         "components": [
           {
-            "/": "/*",
-            "comment": "Match all paths so shared links open the app"
+            "/": "/episode*",
+            "comment": "Episode deep links open the app"
+          },
+          {
+            "/": "/show*",
+            "comment": "Show deep links open the app"
           }
         ]
       }
