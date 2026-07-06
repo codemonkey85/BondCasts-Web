@@ -1,0 +1,15 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["YLT8FWVXBN.com.bondcodes.PodcastApp"],
+        "components": [
+          {
+            "/": "/*",
+            "comment": "Match all paths so shared links open the app"
+          }
+        ]
+      }
+    ]
+  }
+}
