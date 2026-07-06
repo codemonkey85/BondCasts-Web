@@ -12,8 +12,16 @@ no build step.
 | `privacy.html` | Privacy policy (required for App Store Connect) |
 | `support.html` | Support page (required for App Store Connect) |
 | `styles.css` | Shared styles (dark/light aware) |
+| `assets/logo.svg` | Brand mark (play + broadcast arcs; navy→cyan) |
+| `assets/favicon.svg` | Favicon (same mark) |
+| `assets/apple-touch-icon.png` | 180×180 touch icon |
+| `assets/og-image.png` | 1200×630 social share image |
 | `.well-known/apple-app-site-association` | Universal Links association file |
 | `CNAME` | Custom domain for GitHub Pages (`bondcasts.com`) |
+
+The brand mark is a **placeholder direction**, not the final app icon — a clean
+play + broadcast-waves glyph on the app's navy→cyan gradient. Regenerate the PNGs
+from the SVG with the snippet in git history if you tweak `logo.svg`.
 
 ## Deploying on GitHub Pages
 

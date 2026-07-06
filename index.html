@@ -3,85 +3,231 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>BondCasts — A better podcast player for Apple devices</title>
-  <meta name="description" content="BondCasts is a fast, private podcast player for iPhone, iPad, and Mac with iCloud sync, downloads, transcripts, chapters, and CarPlay.">
-  <meta name="theme-color" content="#0b0d12">
+  <title>BondCasts — A better podcast player for iPhone, iPad &amp; Mac</title>
+  <meta name="description" content="BondCasts is a fast, private, native podcast player for iPhone, iPad, and Mac — with iCloud sync, offline downloads, transcripts, chapters, smart playlists, widgets, and Siri.">
+  <meta name="theme-color" content="#0a0f1e">
 
   <!-- Open Graph / social -->
-  <meta property="og:title" content="BondCasts">
-  <meta property="og:description" content="A fast, private podcast player for iPhone, iPad, and Mac.">
+  <meta property="og:title" content="BondCasts — Your podcasts, done right.">
+  <meta property="og:description" content="A fast, private, native podcast player for iPhone, iPad, and Mac.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://bondcasts.com/">
   <meta property="og:image" content="https://bondcasts.com/assets/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
 
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
   <header class="site-header">
-    <a class="brand" href="/">
-      <span class="brand-mark" aria-hidden="true">🎧</span>
-      <span class="brand-name">BondCasts</span>
-    </a>
-    <nav class="site-nav">
-      <a href="/support.html">Support</a>
-      <a href="/privacy.html">Privacy</a>
-    </nav>
+    <div class="wrap">
+      <a class="brand" href="/">
+        <img src="/assets/logo.svg" alt="" width="30" height="30">
+        <span>BondCasts</span>
+      </a>
+      <nav class="site-nav">
+        <a class="nav-plain" href="#features">Features</a>
+        <a class="nav-plain" href="/support.html">Support</a>
+        <a class="nav-plain" href="/privacy.html">Privacy</a>
+      </nav>
+    </div>
   </header>
 
   <main>
+    <!-- Hero -->
     <section class="hero">
+      <span class="eyebrow">Coming 2026 · iPhone · iPad · Mac</span>
+      <img class="hero-mark" src="/assets/logo.svg" alt="BondCasts app icon" width="92" height="92">
       <h1>Your podcasts, done right.</h1>
       <p class="tagline">
-        A fast, private podcast player for iPhone, iPad, and Mac — with
-        iCloud sync, offline downloads, transcripts, and CarPlay.
+        A fast, private, genuinely native podcast player for iPhone, iPad,
+        and Mac — with iCloud sync, offline downloads, transcripts, and more.
       </p>
-      <div class="cta">
-        <!-- TODO: replace with your App Store URL once the app is live -->
-        <a class="app-store-badge" href="#" aria-label="Download on the App Store">
-          Download on the App&nbsp;Store
-        </a>
+      <div class="cta-row">
+        <!-- TODO: swap for the App Store URL once the app is live -->
+        <a class="btn btn-primary" href="#features">See what's inside</a>
+        <a class="btn btn-ghost" href="/support.html">Support</a>
+      </div>
+      <p class="hero-note">Built with SwiftUI. No tracking, no ads — ever.</p>
+
+      <div class="platforms">
+        <span>
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.5 3c.1 1.1-.3 2.2-1 3-.7.8-1.8 1.4-2.9 1.3-.1-1.1.4-2.2 1-3 .7-.8 1.9-1.4 2.9-1.3zM19 17.3c-.5 1.2-.8 1.7-1.4 2.8-.9 1.5-2.2 3.4-3.8 3.4-1.4 0-1.8-.9-3.7-.9-1.9 0-2.3.9-3.7.9-1.6 0-2.8-1.7-3.7-3.2C-.1 16.9-.4 12 1.4 9.4 2.4 8 4.1 7.1 5.7 7.1c1.6 0 2.6 1 3.9 1 1.3 0 2-1 3.9-1 1.4 0 2.9.8 4 2.1-3.5 1.9-3 6.9 1.5 8.1z"/></svg>
+          iPhone
+        </span>
+        <span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="2.5" width="16" height="19" rx="2.2"/><line x1="11" y1="18.5" x2="13" y2="18.5"/></svg>
+          iPad
+        </span>
+        <span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="2.5" y="4" width="19" height="12.5" rx="1.8"/><path d="M8 20h8M9.5 16.5l-.5 3.5M14.5 16.5l.5 3.5"/></svg>
+          Mac
+        </span>
       </div>
     </section>
 
-    <section class="features">
-      <h2 class="visually-hidden">Features</h2>
+    <!-- Features -->
+    <section id="features" class="section wrap">
+      <div class="section-head reveal">
+        <h2>Everything you want in a podcast app</h2>
+        <p>Thoughtfully built on Apple's frameworks — quick, quiet, and right at home on your devices.</p>
+      </div>
+
       <ul class="feature-grid">
-        <li>
+        <li class="reveal">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19a4.5 4.5 0 0 0 .5-8.97A6 6 0 0 0 6.2 11.2 3.6 3.6 0 0 0 7 19h10.5z"/><path d="M12 9v6m0 0l-2.2-2.2M12 15l2.2-2.2"/></svg></div>
           <h3>Syncs everywhere</h3>
-          <p>Your subscriptions, queue, and playback position stay in sync across all your devices with iCloud.</p>
+          <p>Subscriptions, queue, and playback position stay in sync across iPhone, iPad, and Mac through your private iCloud.</p>
         </li>
-        <li>
+        <li class="reveal">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></div>
           <h3>Listen offline</h3>
-          <p>Download episodes for the plane, the subway, or a dead zone, and auto-download new episodes with a simple toggle.</p>
+          <p>Download for the plane, the subway, or a dead zone. Auto-download new episodes, and track batch downloads with a Live Activity.</p>
         </li>
-        <li>
-          <h3>Transcripts &amp; chapters</h3>
-          <p>Follow along with synced transcripts and jump straight to the chapters you care about.</p>
+        <li class="reveal">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></div>
+          <h3>Transcripts</h3>
+          <p>Read along with synced transcripts — or generate one on-device for downloaded episodes, right on your phone. Nothing leaves your device.</p>
         </li>
-        <li>
-          <h3>Built for CarPlay</h3>
-          <p>Browse, queue, and play hands-free with a CarPlay interface designed for the road.</p>
+        <li class="reveal">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4.5" cy="6" r="1.3"/><circle cx="4.5" cy="12" r="1.3"/><circle cx="4.5" cy="18" r="1.3"/></svg></div>
+          <h3>Chapters</h3>
+          <p>Jump straight to the chapters you care about, with artwork and titles pulled from the episode.</p>
         </li>
-        <li>
+        <li class="reveal">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5l6 3.5L5 12V5z" fill="currentColor" stroke="none"/><path d="M5 5l6 3.5L5 12"/><path d="M13 7h6M13 12h6M9 17h10"/><path d="M5 15.5l1.5 1.5L9 14.5"/></svg></div>
           <h3>Smart playlists</h3>
-          <p>Build playlists that fill themselves based on rules you set — new episodes, unplayed, and more.</p>
+          <p>Playlists that fill themselves from rules you set — new, unplayed, downloaded, by show, and more. Set it once and press play.</p>
         </li>
-        <li>
-          <h3>Private by design</h3>
-          <p>No tracking, no ads. Your listening data is yours and stays in your iCloud account.</p>
+        <li class="reveal">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1.6"/><rect x="13" y="3" width="8" height="8" rx="1.6"/><rect x="3" y="13" width="8" height="8" rx="1.6"/><rect x="13" y="13" width="8" height="8" rx="1.6"/></svg></div>
+          <h3>Home-screen widgets</h3>
+          <p>Now Playing, Up Next, and Latest Episodes on your Home Screen — a tap away from picking up where you left off.</p>
+        </li>
+        <li class="reveal">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3z"/><path d="M6 11a6 6 0 0 0 12 0"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="9" y1="21" x2="15" y2="21"/></svg></div>
+          <h3>Siri &amp; Shortcuts</h3>
+          <p>Play a show, skip ahead, or follow a podcast with your voice — powered by App Intents and ready for the Shortcuts app.</p>
+        </li>
+        <li class="reveal">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16m0-16l-3.5 3M12 4l3.5 3"/><path d="M4 20h16"/><path d="M6 9v7M18 9v7"/></svg></div>
+          <h3>OPML import</h3>
+          <p>Coming from another app? Bring every subscription with you in seconds by importing your OPML file.</p>
+        </li>
+        <li class="reveal">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="4" y2="16"/><line x1="8" y1="8" x2="8" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/><line x1="16" y1="9" x2="16" y2="17"/><line x1="20" y1="11" x2="20" y2="15"/></svg></div>
+          <h3>Audio effects</h3>
+          <p>Adjustable playback speed, voice boost, and volume boost so every episode sounds clear — in the car, at the gym, anywhere.</p>
         </li>
       </ul>
+    </section>
+
+    <!-- Privacy band -->
+    <section class="band">
+      <div class="wrap">
+        <div class="reveal">
+          <h2>Private by design</h2>
+          <p>
+            BondCasts has no analytics SDKs, no advertising identifiers, and no
+            server that sees your listening. Your data is yours.
+          </p>
+          <ul>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+              No tracking, no ads, no third-party SDKs
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+              Sync happens in your own private iCloud — we can't read it
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+              Transcription runs on-device; audio is never uploaded to us
+            </li>
+          </ul>
+          <p style="margin-top:1.2rem"><a href="/privacy.html">Read the full privacy policy →</a></p>
+        </div>
+        <div class="band-visual" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 3.5v5.5c0 5-3.4 8.9-8 10.5-4.6-1.6-8-5.5-8-10.5V5.5L12 2z"/><path d="M9 12l2 2 4-4.5"/></svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section wrap">
+      <div class="section-head reveal">
+        <h2>Questions</h2>
+        <p>A few things people ask before launch.</p>
+      </div>
+      <div class="faq reveal">
+        <details>
+          <summary>When is BondCasts coming out?</summary>
+          <p>BondCasts is in active development, targeting a 2026 launch on the App Store for iPhone, iPad, and Mac.</p>
+        </details>
+        <details>
+          <summary>Which devices will it support?</summary>
+          <p>It's a native app for iPhone, iPad, and Mac, built with SwiftUI so it feels at home on each platform. watchOS is planned after 1.0.</p>
+        </details>
+        <details>
+          <summary>Can I bring my subscriptions from another app?</summary>
+          <p>Yes — BondCasts supports OPML import. Export an OPML file from your current podcast app and import it from Settings.</p>
+        </details>
+        <details>
+          <summary>How much will it cost?</summary>
+          <p>Pricing will be announced closer to launch. Whatever it is, there will be no ads and no tracking.</p>
+        </details>
+      </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section class="section wrap">
+      <div class="final-cta reveal">
+        <h2>Podcasts, the way they should be.</h2>
+        <p>Fast, private, and native to Apple's platforms. Coming to the App Store in 2026.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="#features">Explore the features</a>
+          <a class="btn btn-ghost" href="/support.html">Support</a>
+        </div>
+      </div>
     </section>
   </main>
 
   <footer class="site-footer">
-    <p>&copy; 2026 BondCasts. Made by <a href="https://bondcodes.com">Michael Bond</a>.</p>
-    <nav>
-      <a href="/support.html">Support</a>
-      <a href="/privacy.html">Privacy</a>
-      <a href="mailto:support@bondcasts.com">Contact</a>
-    </nav>
+    <div class="wrap">
+      <a class="brand" href="/">
+        <img src="/assets/logo.svg" alt="" width="26" height="26">
+        <span>BondCasts</span>
+      </a>
+      <nav>
+        <a href="/support.html">Support</a>
+        <a href="/privacy.html">Privacy</a>
+        <a href="mailto:support@bondcasts.com">Contact</a>
+        <a href="https://bondcodes.com">Michael Bond</a>
+      </nav>
+    </div>
+    <div class="wrap" style="padding-top:0;color:var(--muted);font-size:0.85rem;">
+      <span>&copy; 2026 BondCasts. Made with care in SwiftUI.</span>
+    </div>
   </footer>
+
+  <script>
+    // Reveal-on-scroll (progressive enhancement; CSS handles reduced-motion)
+    (function () {
+      var els = document.querySelectorAll('.reveal');
+      if (!('IntersectionObserver' in window)) {
+        els.forEach(function (el) { el.classList.add('in'); });
+        return;
+      }
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+        });
+      }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+      els.forEach(function (el) { io.observe(el); });
+    })();
+  </script>
 </body>
 </html>

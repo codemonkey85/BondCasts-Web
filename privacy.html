@@ -4,31 +4,34 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Privacy Policy — BondCasts</title>
-  <meta name="description" content="How BondCasts handles your data.">
-  <meta name="theme-color" content="#0b0d12">
+  <meta name="description" content="How BondCasts handles your data — short version: it doesn't collect it.">
+  <meta name="theme-color" content="#0a0f1e">
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
   <header class="site-header">
-    <a class="brand" href="/">
-      <span class="brand-mark" aria-hidden="true">🎧</span>
-      <span class="brand-name">BondCasts</span>
-    </a>
-    <nav class="site-nav">
-      <a href="/support.html">Support</a>
-      <a href="/privacy.html">Privacy</a>
-    </nav>
+    <div class="wrap">
+      <a class="brand" href="/">
+        <img src="/assets/logo.svg" alt="" width="30" height="30">
+        <span>BondCasts</span>
+      </a>
+      <nav class="site-nav">
+        <a class="nav-plain" href="/#features">Features</a>
+        <a class="nav-plain" href="/support.html">Support</a>
+        <a class="nav-plain" href="/privacy.html">Privacy</a>
+      </nav>
+    </div>
   </header>
 
   <main class="content">
     <h1>Privacy Policy</h1>
     <p class="updated">Last updated: 6 July 2026</p>
 
-    <p>
-      BondCasts is built to respect your privacy. This policy explains what data
-      the app handles and how. In short: BondCasts does not track you, does not
-      show ads, and does not sell your data to anyone.
+    <p class="lede">
+      BondCasts is built to respect your privacy. In short: it does not track
+      you, does not show ads, and does not sell your data to anyone.
     </p>
 
     <h2>Data we don't collect</h2>
@@ -72,20 +75,28 @@
       Apple frameworks. Audio is not uploaded to us for processing.
     </p>
 
-    <h2>Contact</h2>
-    <p>
+    <div class="callout">
       Questions about privacy? Email
       <a href="mailto:privacy@bondcasts.com">privacy@bondcasts.com</a>.
-    </p>
+    </div>
   </main>
 
   <footer class="site-footer">
-    <p>&copy; 2026 BondCasts. Made by <a href="https://bondcodes.com">Michael Bond</a>.</p>
-    <nav>
-      <a href="/support.html">Support</a>
-      <a href="/privacy.html">Privacy</a>
-      <a href="mailto:support@bondcasts.com">Contact</a>
-    </nav>
+    <div class="wrap">
+      <a class="brand" href="/">
+        <img src="/assets/logo.svg" alt="" width="26" height="26">
+        <span>BondCasts</span>
+      </a>
+      <nav>
+        <a href="/support.html">Support</a>
+        <a href="/privacy.html">Privacy</a>
+        <a href="mailto:support@bondcasts.com">Contact</a>
+        <a href="https://bondcodes.com">Michael Bond</a>
+      </nav>
+    </div>
+    <div class="wrap" style="padding-top:0;color:var(--muted);font-size:0.85rem;">
+      <span>&copy; 2026 BondCasts. Made with care in SwiftUI.</span>
+    </div>
   </footer>
 </body>
 </html>
