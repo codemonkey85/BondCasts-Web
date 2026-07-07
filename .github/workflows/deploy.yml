@@ -31,11 +31,32 @@ jobs:
       - name: Configure Pages
         uses: actions/configure-pages@v6
 
+      # NOTE: actions/upload-pages-artifact archives the site with
+      # `tar --exclude=.[^/]*`, which strips every dot-entry — including
+      # `.well-known`. That silently dropped `.well-known/apple-app-site-association`
+      # from the published site (404), so iOS couldn't associate the app with the
+      # domain and universal/share links fell back to the web page instead of
+      # opening the app. Archive the artifact ourselves, excluding only
+      # `.git`/`.github`, so `.well-known` ships. The result is the standard
+      # `github-pages` artifact that deploy-pages consumes.
+      - name: Archive site artifact (preserving .well-known)
+        run: |
+          tar \
+            --dereference --hard-dereference \
+            --directory "$GITHUB_WORKSPACE" \
+            -cvf "$RUNNER_TEMP/artifact.tar" \
+            --exclude=.git \
+            --exclude=.github \
+            .
+
       - name: Upload site artifact
-        uses: actions/upload-pages-artifact@v5
+        # Pinned to the same upload-artifact release that upload-pages-artifact@v5
+        # uses internally, so the artifact format stays compatible with deploy-pages.
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
         with:
-          # This is a plain static site — publish the repo root as-is
-          path: .
+          name: github-pages
+          path: ${{ runner.temp }}/artifact.tar
+          retention-days: 1
 
       - name: Deploy to GitHub Pages
         id: deployment
