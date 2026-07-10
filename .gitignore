@@ -1,1 +1,8 @@
 .DS_Store
+
+# .NET Functions API build output
+api/bin/
+api/obj/
+
+# Local Functions settings (never publish)
+api/local.settings.json
