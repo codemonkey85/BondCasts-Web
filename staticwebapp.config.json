@@ -2,7 +2,8 @@
   "$schema": "https://json.schemastore.org/staticwebapp.config.json",
   "routes": [
     { "route": "/episode", "rewrite": "/api/episode" },
-    { "route": "/show", "rewrite": "/api/show" }
+    { "route": "/show", "rewrite": "/api/show" },
+    { "route": "/.well-known/apple-app-site-association", "headers": { "content-type": "application/json" } }
   ],
   "navigationFallback": {
     "rewrite": "/index.html",
