@@ -36,6 +36,9 @@ public static class RssFeedParser
             Description: channel.Element("description")?.Value?.Trim(),
             Author: itunesNs is null ? null : channel.Element(itunesNs + "author")?.Value?.Trim(),
             ArtworkUrl: ChannelArtwork(channel, itunesNs),
+            // The plain (non-namespaced) <link> is the show's website; the atom
+            // self-link is namespaced, so this won't accidentally grab the feed URL.
+            Link: channel.Element("link")?.Value?.Trim(),
             IsExplicit: ParseExplicit(itunesNs is null ? null : channel.Element(itunesNs + "explicit")?.Value),
             Episodes: episodes);
     }
@@ -53,6 +56,7 @@ public static class RssFeedParser
             Description: (contentEncoded ?? item.Element("description")?.Value)?.Trim(),
             ArtworkUrl: itunesNs is null ? null : (string?)item.Element(itunesNs + "image")?.Attribute("href"),
             EnclosureUrl: (string?)item.Element("enclosure")?.Attribute("url"),
+            Link: item.Element("link")?.Value?.Trim(),
             PublishedAt: ParseRfc822(item.Element("pubDate")?.Value),
             DurationSeconds: itunesNs is null ? null : ParseDuration(item.Element(itunesNs + "duration")?.Value),
             IsExplicit: ParseExplicit(itunesNs is null ? null : item.Element(itunesNs + "explicit")?.Value));
