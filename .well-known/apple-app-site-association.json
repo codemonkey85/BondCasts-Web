@@ -1,0 +1,19 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["YLT8FWVXBN.com.bondcodes.PodcastApp"],
+        "components": [
+          {
+            "/": "/episode*",
+            "comment": "Episode deep links open the app"
+          },
+          {
+            "/": "/show*",
+            "comment": "Show deep links open the app"
+          }
+        ]
+      }
+    ]
+  }
+}
