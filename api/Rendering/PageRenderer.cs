@@ -18,27 +18,30 @@ public sealed partial class PageRenderer
     {
         var showTitle = Coalesce(feed.Title, SiteName);
         var epTitle = Coalesce(episode.Title, "Episode");
-        var image = Coalesce(episode.ArtworkUrl, feed.ArtworkUrl, DefaultImage);
+        // Hero art prefers episode-specific artwork, then the show's; DefaultImage
+        // is only for og:image so the visible page never shows the app icon as "art".
+        var artwork = Coalesce(episode.ArtworkUrl, feed.ArtworkUrl);
         var notes = PlainText(episode.Description);
         var ogDescription = Truncate($"{showTitle} · {Summarize(notes)}", 200);
 
-        var meta = new StringBuilder();
         var subtitleParts = new List<string> { HtmlEncode(showTitle) };
         if (episode.PublishedAt is { } date) subtitleParts.Add(HtmlEncode(date.ToString("MMMM d, yyyy")));
         if (FormatDuration(episode.DurationSeconds) is { } dur) subtitleParts.Add(HtmlEncode(dur));
 
-        meta.Append($"<p class=\"lede\">{string.Join(" · ", subtitleParts)}</p>");
-        if (notes.Length > 0)
-            meta.Append($"<div class=\"notes\"><p>{HtmlEncode(Truncate(notes, 1200))}</p></div>");
+        var body = notes.Length > 0
+            ? $"<div class=\"notes\"><p>{HtmlEncode(Truncate(notes, 1200))}</p></div>"
+            : string.Empty;
 
         return RenderPage(
             documentTitle: $"{epTitle} — {showTitle}",
             ogTitle: epTitle,
             ogDescription: ogDescription,
-            ogImage: image,
+            ogImage: Coalesce(artwork, DefaultImage),
             ogType: "article",
+            heroImage: artwork,
             headingHtml: HtmlEncode(epTitle),
-            bodyHtml: meta.ToString(),
+            subtitleHtml: string.Join(" · ", subtitleParts),
+            bodyHtml: body,
             openLabel: "Open episode in BondCasts",
             originalUrl: originalUrl);
     }
@@ -46,24 +49,25 @@ public sealed partial class PageRenderer
     public string RenderShow(ParsedFeed feed, string originalUrl)
     {
         var showTitle = Coalesce(feed.Title, SiteName);
-        var image = Coalesce(feed.ArtworkUrl, DefaultImage);
+        var artwork = feed.ArtworkUrl ?? string.Empty;
         var description = PlainText(feed.Description);
         var ogDescription = Truncate(Summarize(description), 200);
 
-        var body = new StringBuilder();
-        if (feed.Author is { Length: > 0 } author)
-            body.Append($"<p class=\"lede\">{HtmlEncode(author)}</p>");
-        if (description.Length > 0)
-            body.Append($"<div class=\"notes\"><p>{HtmlEncode(Truncate(description, 1200))}</p></div>");
+        var subtitle = feed.Author is { Length: > 0 } author ? HtmlEncode(author) : null;
+        var body = description.Length > 0
+            ? $"<div class=\"notes\"><p>{HtmlEncode(Truncate(description, 1200))}</p></div>"
+            : string.Empty;
 
         return RenderPage(
             documentTitle: $"{showTitle} — {SiteName}",
             ogTitle: showTitle,
             ogDescription: ogDescription.Length > 0 ? ogDescription : $"Listen to {showTitle} on BondCasts.",
-            ogImage: image,
+            ogImage: Coalesce(artwork, DefaultImage),
             ogType: "website",
+            heroImage: artwork,
             headingHtml: HtmlEncode(showTitle),
-            bodyHtml: body.ToString(),
+            subtitleHtml: subtitle,
+            bodyHtml: body,
             openLabel: "Open podcast in BondCasts",
             originalUrl: originalUrl);
     }
@@ -84,7 +88,9 @@ public sealed partial class PageRenderer
             ogDescription: $"Open this {kind} in {SiteName}.",
             ogImage: DefaultImage,
             ogType: "website",
+            heroImage: string.Empty,
             headingHtml: $"Open this {HtmlEncode(kind)} in {SiteName}",
+            subtitleHtml: null,
             bodyHtml: body.ToString(),
             openLabel: "Get BondCasts",
             originalUrl: originalUrl);
@@ -92,8 +98,28 @@ public sealed partial class PageRenderer
 
     private static string RenderPage(
         string documentTitle, string ogTitle, string ogDescription, string ogImage,
-        string ogType, string headingHtml, string bodyHtml, string openLabel, string originalUrl)
+        string ogType, string heroImage, string headingHtml, string? subtitleHtml,
+        string bodyHtml, string openLabel, string originalUrl)
     {
+        // The visible hero: cover art (when the feed has real artwork) beside the
+        // title + subtitle. Art is cross-origin (the podcast host's CDN), so no
+        // referrer is sent and decoding is async to keep first paint snappy.
+        var artHtml = string.IsNullOrEmpty(heroImage)
+            ? string.Empty
+            : $"<img class=\"preview-art\" src=\"{HtmlEncode(heroImage)}\" alt=\"{HtmlEncode(ogTitle)} artwork\" width=\"176\" height=\"176\" loading=\"eager\" decoding=\"async\" referrerpolicy=\"no-referrer\">";
+        var subtitleH = string.IsNullOrEmpty(subtitleHtml)
+            ? string.Empty
+            : $"<p class=\"lede\">{subtitleHtml}</p>";
+        var hero = $"""
+              <div class="preview-hero{(string.IsNullOrEmpty(heroImage) ? " no-art" : "")}">
+                  {artHtml}
+                  <div class="preview-head">
+                    <h1>{headingHtml}</h1>
+                    {subtitleH}
+                  </div>
+                </div>
+            """;
+
         // og:url reflects the canonical share link so unfurls attribute correctly.
         return $"""
         <!DOCTYPE html>
@@ -132,7 +158,7 @@ public sealed partial class PageRenderer
           </header>
 
           <main class="content">
-            <h1>{headingHtml}</h1>
+            {hero}
             {bodyHtml}
             <div class="callout">
               <a class="brand" href="/">{HtmlEncode(openLabel)}</a>
