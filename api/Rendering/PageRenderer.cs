@@ -32,6 +32,11 @@ public sealed partial class PageRenderer
             ? $"<div class=\"notes\"><p>{HtmlEncode(Truncate(notes, 1200))}</p></div>"
             : string.Empty;
 
+        // Direct link to this episode's page, plus the show's own site.
+        var links = LinkRow(
+            ExternalLink(episode.Link, "Episode page"),
+            ExternalLink(feed.Link, "Show website"));
+
         return RenderPage(
             documentTitle: $"{epTitle} — {showTitle}",
             ogTitle: epTitle,
@@ -42,6 +47,7 @@ public sealed partial class PageRenderer
             headingHtml: HtmlEncode(epTitle),
             subtitleHtml: string.Join(" · ", subtitleParts),
             bodyHtml: body,
+            linksHtml: links,
             openLabel: "Open episode in BondCasts",
             originalUrl: originalUrl);
     }
@@ -58,6 +64,8 @@ public sealed partial class PageRenderer
             ? $"<div class=\"notes\"><p>{HtmlEncode(Truncate(description, 1200))}</p></div>"
             : string.Empty;
 
+        var links = LinkRow(ExternalLink(feed.Link, "Visit website"));
+
         return RenderPage(
             documentTitle: $"{showTitle} — {SiteName}",
             ogTitle: showTitle,
@@ -68,6 +76,7 @@ public sealed partial class PageRenderer
             headingHtml: HtmlEncode(showTitle),
             subtitleHtml: subtitle,
             bodyHtml: body,
+            linksHtml: links,
             openLabel: "Open podcast in BondCasts",
             originalUrl: originalUrl);
     }
@@ -92,6 +101,7 @@ public sealed partial class PageRenderer
             headingHtml: $"Open this {HtmlEncode(kind)} in {SiteName}",
             subtitleHtml: null,
             bodyHtml: body.ToString(),
+            linksHtml: string.Empty,
             openLabel: "Get BondCasts",
             originalUrl: originalUrl);
     }
@@ -99,7 +109,7 @@ public sealed partial class PageRenderer
     private static string RenderPage(
         string documentTitle, string ogTitle, string ogDescription, string ogImage,
         string ogType, string heroImage, string headingHtml, string? subtitleHtml,
-        string bodyHtml, string openLabel, string originalUrl)
+        string bodyHtml, string linksHtml, string openLabel, string originalUrl)
     {
         // The visible hero: cover art (when the feed has real artwork) beside the
         // title + subtitle. Art is cross-origin (the podcast host's CDN), so no
@@ -160,6 +170,7 @@ public sealed partial class PageRenderer
           <main class="content">
             {hero}
             {bodyHtml}
+            {linksHtml}
             <div class="callout">
               <a class="brand" href="/">{HtmlEncode(openLabel)}</a>
             </div>
@@ -190,6 +201,36 @@ public sealed partial class PageRenderer
     // MARK: - Text helpers
 
     private static string HtmlEncode(string? s) => WebUtility.HtmlEncode(s ?? string.Empty);
+
+    /// Wraps one or more feed-provided links in a row, dropping any that were
+    /// empty (missing or non-http). Returns "" when nothing survives.
+    private static string LinkRow(params string[] anchors)
+    {
+        var present = anchors.Where(a => a.Length > 0);
+        var joined = string.Join("", present);
+        return joined.Length == 0 ? string.Empty : $"<p class=\"preview-links\">{joined}</p>";
+    }
+
+    /// Builds an external anchor for a feed-supplied URL. The URL is untrusted
+    /// (feed content), so only absolute http/https is honored and the link is
+    /// rel="nofollow ugc" + target=_blank; anything else renders as nothing.
+    private static string ExternalLink(string? url, string label)
+    {
+        var safe = SafeUrl(url);
+        return safe.Length == 0
+            ? string.Empty
+            : $"<a class=\"preview-link\" href=\"{HtmlEncode(safe)}\" target=\"_blank\" rel=\"noopener nofollow ugc\">{HtmlEncode(label)}<span aria-hidden=\"true\"> ↗</span></a>";
+    }
+
+    private static string SafeUrl(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return string.Empty;
+        url = url.Trim();
+        return Uri.TryCreate(url, UriKind.Absolute, out var u)
+               && (u.Scheme == Uri.UriSchemeHttp || u.Scheme == Uri.UriSchemeHttps)
+            ? url
+            : string.Empty;
+    }
 
     private static string Coalesce(params string?[] values) =>
         values.FirstOrDefault(v => !string.IsNullOrWhiteSpace(v)) ?? string.Empty;

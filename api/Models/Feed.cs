@@ -8,6 +8,7 @@ public sealed record ParsedFeed(
     string? Description,
     string? Author,
     string? ArtworkUrl,
+    string? Link,
     bool IsExplicit,
     IReadOnlyList<ParsedEpisode> Episodes);
 
@@ -17,6 +18,7 @@ public sealed record ParsedEpisode(
     string? Description,
     string? ArtworkUrl,
     string? EnclosureUrl,
+    string? Link,
     DateTimeOffset? PublishedAt,
     double? DurationSeconds,
     bool IsExplicit);
