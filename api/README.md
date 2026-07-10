@@ -1,6 +1,6 @@
 # BondCasts link-preview API
 
-Azure Functions (.NET 8 isolated) that server-render rich landing pages for the
+Azure Functions (.NET 9 isolated) that server-render rich landing pages for the
 universal-link paths `/episode` and `/show`, so shared links unfurl with real
 show/episode metadata (title, artwork, notes) instead of a generic card.
 

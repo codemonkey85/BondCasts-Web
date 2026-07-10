@@ -17,6 +17,9 @@
       "/*.ico"
     ]
   },
+  "platform": {
+    "apiRuntime": "dotnet-isolated:9.0"
+  },
   "mimeTypes": {
     ".": "application/json"
   },
