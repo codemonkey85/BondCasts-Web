@@ -7,21 +7,22 @@
     </linearGradient>
   </defs>
   <rect x="0" y="0" width="512" height="512" rx="115" fill="url(#bc-grad)"/>
-  <g transform="translate(-18,0)">
-    <!-- broadcast arcs radiating from the play tip -->
+  <!-- Mark: a "B" whose bowls are interlocking chain links, plus a three-bar
+       equalizer. Matches the app icon foreground; centered in the 512 canvas. -->
+  <g transform="translate(-25,-9)">
     <g fill="none" stroke-linecap="round">
-      <path d="M278.6 210.1 A60 60 0 0 1 278.6 301.9"  stroke="#ffffff" stroke-width="24" opacity="0.95"/>
-      <path d="M304.3 179.4 A100 100 0 0 1 304.3 332.6" stroke="#bfe0f2" stroke-width="24" opacity="0.85"/>
-      <path d="M330.0 148.8 A140 140 0 0 1 330.0 363.2" stroke="#8fc9e8" stroke-width="24" opacity="0.70"/>
+      <circle cx="250" cy="192" r="54" stroke="#ffffff" stroke-width="34"/>
+      <circle cx="258" cy="322" r="68" stroke="#7cc3e6" stroke-width="38"/>
+      <!-- weave: upper (white) link crosses in front of the lower link -->
+      <path d="M302 212 A54 54 0 0 1 266 246" stroke="#ffffff" stroke-width="34"/>
     </g>
-    <!-- play triangle: single filled path, generously rounded corners -->
-    <path d="M150 188
-             L150 324
-             Q150 354 171.4 333.0
-             L234.3 271.4
-             Q250 256 234.3 240.6
-             L171.4 179.0
-             Q150 158 150 188
-             Z" fill="#ffffff"/>
+    <!-- B spine -->
+    <rect x="150" y="140" width="64" height="250" rx="24" fill="#ffffff"/>
+    <!-- equalizer -->
+    <g stroke="#ffffff" stroke-width="18" stroke-linecap="round">
+      <path d="M348 232 L348 280"/>
+      <path d="M376 204 L376 308"/>
+      <path d="M404 244 L404 268"/>
+    </g>
   </g>
 </svg>
