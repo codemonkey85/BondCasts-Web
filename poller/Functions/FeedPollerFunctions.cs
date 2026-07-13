@@ -1,8 +1,8 @@
-using BondCasts.Api.Services.Polling;
+using BondCasts.Poller.Services.Polling;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 
-namespace BondCasts.Api.Functions;
+namespace BondCasts.Poller.Functions;
 
 /// Server-side new-episode discovery for the BondCasts app (PodcastApp#135).
 /// Devices register followed feeds as PolledFeed records in the app's public

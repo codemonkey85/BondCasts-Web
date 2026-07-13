@@ -1,7 +1,7 @@
-using BondCasts.Api.Services.CloudKit;
+using BondCasts.Poller.Services.CloudKit;
 using Microsoft.Extensions.Logging;
 
-namespace BondCasts.Api.Services.Polling;
+namespace BondCasts.Poller.Services.Polling;
 
 /// Tunables (Azure app settings / local.settings.json Values):
 ///   Poller__IntervalMinutes   base minutes between polls of one feed (default 20)

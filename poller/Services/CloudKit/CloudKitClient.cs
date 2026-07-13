@@ -3,7 +3,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
-namespace BondCasts.Api.Services.CloudKit;
+namespace BondCasts.Poller.Services.CloudKit;
 
 /// Minimal CloudKit Web Services client using server-to-server key auth,
 /// lifted from the proven spike tool (PodcastApp docs/spikes/CKSpikeTool).

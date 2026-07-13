@@ -1,7 +1,7 @@
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
 
-namespace BondCasts.Api.Services.CloudKit;
+namespace BondCasts.Poller.Services.CloudKit;
 
 /// A device registration for one feed, read back from a PolledFeed record.
 /// The app is the ONLY place feedHash is derived (first 16 hex chars of

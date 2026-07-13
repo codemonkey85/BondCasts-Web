@@ -1,6 +1,6 @@
 using System.Security.Cryptography;
 
-namespace BondCasts.Api.Services.CloudKit;
+namespace BondCasts.Poller.Services.CloudKit;
 
 /// Server-to-server CloudKit Web Services configuration. Keys are
 /// ENVIRONMENT-SCOPED in the CloudKit console (one key per env, same keypair

@@ -4,7 +4,7 @@ using System.Text.Json;
 using Azure;
 using Azure.Data.Tables;
 
-namespace BondCasts.Api.Services.Polling;
+namespace BondCasts.Poller.Services.Polling;
 
 /// Per-feed polling state, keyed by the app-derived feedHash. KnownIdentities
 /// holds short hashes of recently seen episode identities (newest first,

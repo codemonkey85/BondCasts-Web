@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Xml;
 
-namespace BondCasts.Api.Services.Polling;
+namespace BondCasts.Poller.Services.Polling;
 
 public sealed record FeedHead(string? ChannelTitle, IReadOnlyList<FeedHeadItem> Items);
 
@@ -11,7 +11,7 @@ public sealed record FeedHeadItem(string Identity, string? Title, DateTimeOffset
 
 /// Streaming head-parse of an RSS feed: channel title plus per-item
 /// guid/title/pubDate/enclosure only, stopping after MaxItems. New-episode
-/// detection doesn't need the full parser (BondCasts.Api.Services.RssFeedParser),
+/// detection doesn't need the api project's full parser (RssFeedParser),
 /// and stopping early bounds the read on pathological multi-MB feeds.
 public static class FeedHeadParser
 {
