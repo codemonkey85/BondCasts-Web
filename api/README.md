@@ -1,8 +1,13 @@
-# BondCasts link-preview API
+# BondCasts API
 
-Azure Functions (.NET 9 isolated) that server-render rich landing pages for the
-universal-link paths `/episode` and `/show`, so shared links unfurl with real
-show/episode metadata (title, artwork, notes) instead of a generic card.
+Azure Functions (.NET 9 isolated) with two jobs:
+
+1. **Link previews** — server-render rich landing pages for the universal-link
+   paths `/episode` and `/show`, so shared links unfurl with real show/episode
+   metadata (title, artwork, notes) instead of a generic card.
+2. **Feed poller** — server-side new-episode discovery for the BondCasts app
+   (PodcastApp#135): polls the feeds devices register in CloudKit and writes
+   `NewEpisode` records whose CKQuerySubscription fan-out delivers the push.
 
 ## Why this exists
 
@@ -53,6 +58,46 @@ One-time setup:
 4. Confirm `https://bondcasts.com/.well-known/apple-app-site-association` still
    returns the AASA (as `application/json`) after the cutover, or universal
    links stop opening the app.
+
+## Feed poller (PodcastApp#135)
+
+Every 10 minutes `PollFeeds` (`Functions/FeedPollerFunctions.cs`):
+
+1. Reads `PolledFeed` registrations from the app container's public CloudKit
+   database (server-to-server key auth), unions them by `feedHash`, and expires
+   rows devices haven't re-touched in ~30 days. The app is the ONLY place
+   `feedHash` is derived — the server reads it from the rows, never recomputes.
+2. Conditionally GETs each due feed (ETag/If-Modified-Since; per-feed base
+   interval `Poller__IntervalMinutes` + jitter, exponential backoff on
+   failures) and head-parses guid/title/pubDate only, stopping after 250 items.
+3. On discovery writes ONE `NewEpisode` record per feed per cycle (multi-episode
+   discoveries collapse to "N new episodes" — every record write is one banner
+   per subscribed device), then prunes its own records older than ~30 days.
+   First sight of a feed seeds state without announcing; new-to-us items with
+   pubDates older than 14 days are treated as backfill, not news.
+
+Per-feed state (ETag, known-episode window, backoff) lives in Table Storage
+(`bondcastsfeedpollstate`) in the Functions storage account.
+
+### Configuration
+
+Without these settings the poller no-ops and link previews work as before:
+
+| Setting | Value |
+| --- | --- |
+| `CloudKit__Container` | `iCloud.com.bondcodes.PodcastApp` |
+| `CloudKit__Environment` | `development` or `production` |
+| `CloudKit__KeyId` | Server-to-server key ID for THAT environment (keys are env-scoped; same keypair, one key per env) |
+| `CloudKit__PrivateKeyPemBase64` | `base64 < eckey.pem` of the EC P-256 private key |
+| `Poller__IntervalMinutes` | Optional; per-feed base poll interval (default 20) |
+
+### Hosting caveat
+
+Static Web Apps **managed** Functions support HTTP triggers only — the timer
+will not run there. Deploy this project as a standalone Azure Functions app
+(Consumption is fine; Table Storage rides the required storage account), either
+linked to the SWA as bring-your-own-functions (Standard tier) or alongside it
+with the SWA keeping the managed link-preview endpoints.
 
 ## Notes
 
