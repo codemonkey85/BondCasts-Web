@@ -73,19 +73,26 @@ applinks:bondcasts.com
 
 ## Privacy: keep the site, label, and manifest in sync
 
-The App Store nutrition label is currently **"Data Not Collected"**, and that's
-accurate: the app has no third-party analytics/ad/crash SDKs, syncs only via the
-user's private CloudKit database (which the developer can't read), and fetches
-feeds directly from podcast hosts the user chose. Apple's own platform metrics
-(App Store + opt-in App Analytics) are Apple's collection, not ours.
+The App Store nutrition label is **"Data Not Linked to You"** as of 2026-07-13
+(re-audited for PodcastApp#135): the new-episode push service registers the
+public feed URLs of notification-enabled shows in the public CloudKit database
+under a random per-device ID, which the poller reads with server-to-server
+keys (~30-day retention). Declared: Identifiers > Device ID and Usage Data >
+Other Usage Data, purpose App Functionality, not linked to identity, no
+tracking. Everything else is unchanged: no third-party analytics/ad/crash
+SDKs, sync via the user's private CloudKit database (which the developer
+can't read), feeds fetched directly from podcast hosts the user chose.
+Apple's own platform metrics (App Store + opt-in App Analytics) are Apple's
+collection, not ours.
 
-If you ever add any of the following, you must revisit **all three** — the
+If you ever add any of the following, you must revisit **all three** - the
 nutrition label in App Store Connect, `NSPrivacyCollectedDataTypes` in
 `PrivacyInfo.xcprivacy`, and `privacy.html` here:
 
 - [ ] A crash/analytics/attribution SDK (Sentry, TelemetryDeck, Firebase, etc.)
 - [ ] An account system (Sign in with Apple, email login) or your own server
       that stores user data
-- [ ] A **public** CloudKit database, or any data shared beyond the user's own
-      private iCloud
+- [x] A **public** CloudKit database, or any data shared beyond the user's own
+      private iCloud (2026-07-13, the #135 push registrations - label, manifest,
+      and privacy.html all updated)
 - [ ] Anything that phones home (remote config, feature flags, server logging)
