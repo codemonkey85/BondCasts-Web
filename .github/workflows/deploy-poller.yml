@@ -1,0 +1,48 @@
+# Deploys the CloudKit feed poller (poller/) to the bondcasts-poller
+# Azure Functions app (Flex Consumption). Auth is OIDC via the
+# bondcasts-poller-deploy Entra app (federated credential on this repo's
+# main branch); no publish profile or stored password.
+
+name: Deploy Poller
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "poller/**"
+      - ".github/workflows/deploy-poller.yml"
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Publish
+        run: dotnet publish poller/BondCasts.Poller.csproj -c Release -o publish
+
+      - name: Zip
+        run: cd publish && zip -r ../poller.zip .
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy
+        run: |
+          az functionapp deployment source config-zip \
+            --name bondcasts-poller \
+            --resource-group BondCasts-Web \
+            --src poller.zip
