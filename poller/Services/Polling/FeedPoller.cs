@@ -144,7 +144,10 @@ public sealed class FeedPoller(
             state.LastModified = response.Content.Headers.LastModified?.ToString("R");
             MarkSuccess(state);
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        // HttpClient.Timeout surfaces as TaskCanceledException (an
+        // OperationCanceledException) even when our token never fired; a hung
+        // feed host must take the failure/backoff path, not abort the run.
+        catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
         {
             state.FailureCount += 1;
             var backoff = options.PollInterval * Math.Pow(2, Math.Min(state.FailureCount, 6));
