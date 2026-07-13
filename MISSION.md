@@ -22,9 +22,10 @@ yours - not a product to be packaged and sold.
 
 ## What we promise
 
-- **We don't collect your data.** Your subscriptions, history, and habits stay
-  on your devices and in your own private iCloud - not on our servers, because
-  we don't have any watching you.
+- **We don't track you.** No accounts, no analytics, no profiles. Your
+  subscriptions, history, and habits live on your devices and in your own
+  private iCloud. The only thing our notification service ever sees is which
+  public feeds want new-episode alerts - tied to a random ID, never to you.
 - **We don't hold your data hostage.** Import and export your subscriptions as
   standard OPML any time. Your library is yours to take with you, always.
 - **We don't show you ads.** No banners, no tracking pixels, no feed full of
