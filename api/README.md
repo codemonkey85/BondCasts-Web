@@ -54,6 +54,12 @@ One-time setup:
    returns the AASA (as `application/json`) after the cutover, or universal
    links stop opening the app.
 
+## Related
+
+The feed poller for BondCasts new-episode push (PodcastApp#135) lives in
+`../poller` as a separate Functions project - SWA managed Functions only run
+HTTP triggers, so its timer can't be deployed from here. See `../poller/README.md`.
+
 ## Notes
 
 - `og:image` points at the podcast's own artwork URL, so image bandwidth stays

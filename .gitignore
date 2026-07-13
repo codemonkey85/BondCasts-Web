@@ -6,3 +6,8 @@ api/obj/
 
 # Local Functions settings (never publish)
 api/local.settings.json
+
+# Poller Functions build output + local settings
+poller/bin/
+poller/obj/
+poller/local.settings.json
