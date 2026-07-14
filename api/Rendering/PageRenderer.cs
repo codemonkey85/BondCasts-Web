@@ -1,7 +1,7 @@
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
-using BondCasts.Api.Models;
+using BondCasts.Feeds;
 
 namespace BondCasts.Api.Rendering;
 
@@ -21,7 +21,7 @@ public sealed partial class PageRenderer
         // Hero art prefers episode-specific artwork, then the show's; DefaultImage
         // is only for og:image so the visible page never shows the app icon as "art".
         var artwork = Coalesce(episode.ArtworkUrl, feed.ArtworkUrl);
-        var notes = PlainText(episode.Description);
+        var notes = PlainText(episode.Summary);
         var ogDescription = Truncate($"{showTitle} · {Summarize(notes)}", 200);
 
         var subtitleParts = new List<string> { HtmlEncode(showTitle) };

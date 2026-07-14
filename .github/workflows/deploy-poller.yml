@@ -10,6 +10,7 @@ on:
     branches: [main]
     paths:
       - "poller/**"
+      - "feeds/**"
       - ".github/workflows/deploy-poller.yml"
   workflow_dispatch:
 

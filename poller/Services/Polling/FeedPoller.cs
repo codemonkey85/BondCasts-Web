@@ -1,3 +1,7 @@
+using System.Security.Cryptography;
+using System.Text.Json;
+using BondCasts.Feeds;
+using BondCasts.Poller.Services.Cache;
 using BondCasts.Poller.Services.CloudKit;
 using Microsoft.Extensions.Logging;
 
@@ -25,17 +29,21 @@ public sealed class PollerOptions
 
 /// One poll cycle over every registered feed:
 /// PolledFeed rows -> union by feedHash -> expire stale registrations ->
-/// conditional GET each due feed -> head-parse -> announce ONE NewEpisode per
-/// feed with discoveries (collapsed; each record write is one banner per
-/// subscribed device) -> persist per-feed state -> prune old announcements.
+/// conditional GET each due feed -> FULL parse (shared with the app + web) ->
+/// announce ONE NewEpisode per feed with discoveries (collapsed; each record
+/// write is one banner per subscribed device) -> cache the parsed feed for the
+/// server-backed feed endpoint (#174) -> persist per-feed state -> prune old
+/// announcements.
 public sealed class FeedPoller(
     PollerOptions options,
     FeedPollStateStore stateStore,
+    FeedCacheStore cacheStore,
     IHttpClientFactory httpClientFactory,
     ILoggerFactory loggerFactory)
 {
     public const string HttpClientName = "poller";
     private const int MaxParallelFetches = 4;
+    private const long MaxFeedBytes = 16 * 1024 * 1024; // guard against pathological feeds
     private static readonly TimeSpan MaxBackoff = TimeSpan.FromHours(24);
     private static readonly TimeSpan PruneEvery = TimeSpan.FromHours(24);
 
@@ -52,6 +60,7 @@ public sealed class FeedPoller(
         using var cloudKit = new CloudKitClient(ckOptions, httpClientFactory.CreateClient(HttpClientName));
         var store = new PushStore(cloudKit, loggerFactory.CreateLogger<PushStore>());
         await stateStore.EnsureTableAsync(ct);
+        await cacheStore.EnsureContainerAsync(ct);
 
         var registrations = await store.FetchPolledFeedsAsync(ct);
         var cutoff = DateTimeOffset.UtcNow - options.RegistrationMaxAge;
@@ -71,10 +80,11 @@ public sealed class FeedPoller(
 
         var states = await stateStore.LoadAllAsync(ct);
 
-        // Drop state for feeds nobody registers anymore.
+        // Drop state (and cached blob) for feeds nobody registers anymore.
         foreach (var orphanHash in states.Keys.Except(feeds.Keys).ToList())
         {
             await stateStore.DeleteAsync(orphanHash, ct);
+            await cacheStore.DeleteAsync(orphanHash, ct);
             states.Remove(orphanHash);
         }
 
@@ -121,28 +131,31 @@ public sealed class FeedPoller(
 
             if (response.StatusCode == System.Net.HttpStatusCode.NotModified)
             {
+                // Unchanged upstream: the existing cached blob is still valid.
                 MarkSuccess(state);
                 return;
             }
             response.EnsureSuccessStatusCode();
 
-            await using var stream = await response.Content.ReadAsStreamAsync(ct);
-            var head = await FeedHeadParser.ParseAsync(stream, ct);
+            var body = await ReadBodyAsync(response, ct);
+            var feed = RssFeedParser.Parse(body, state.FeedUrl);
 
             var known = state.KnownIdentities.ToHashSet();
-            var newItems = head.Items
-                .Select(item => (Item: item, Hash: FeedPollStateStore.IdentityHash(item.Identity)))
+            var newItems = feed.Episodes
+                .Select(episode => (Episode: episode, Hash: FeedPollStateStore.IdentityHash(episode.Guid)))
                 .Where(x => !known.Contains(x.Hash))
                 .ToList();
 
             if (!state.IsFirstObservation && newItems.Count > 0)
-                await AnnounceAsync(state, store, head, newItems.Select(x => x.Item).ToList(), ct);
+                await AnnounceAsync(state, store, feed, newItems.Select(x => x.Episode).ToList(), ct);
 
             // Newest-first merge; SaveAsync caps the window length.
             state.KnownIdentities = newItems.Select(x => x.Hash).Concat(state.KnownIdentities).ToList();
             state.ETag = response.Headers.ETag?.ToString();
             state.LastModified = response.Content.Headers.LastModified?.ToString("R");
             MarkSuccess(state);
+
+            await UpdateCacheAsync(state, feed, ct);
         }
         // HttpClient.Timeout surfaces as TaskCanceledException (an
         // OperationCanceledException) even when our token never fired; a hung
@@ -158,9 +171,29 @@ public sealed class FeedPoller(
         }
     }
 
+    /// Serializes the parsed feed and caches it for the /feed/{feedHash}
+    /// endpoint, but only when its content changed since the last write — an
+    /// unchanged re-upload would churn the ETag and defeat client 304s. A
+    /// storage failure is logged, never fatal: the poll (and its push) stands.
+    private async Task UpdateCacheAsync(FeedPollState state, ParsedFeed feed, CancellationToken ct)
+    {
+        try
+        {
+            var json = JsonSerializer.SerializeToUtf8Bytes(feed, FeedJson.Options);
+            var etag = ContentHash(json);
+            if (etag == state.CacheETag) return;
+            await cacheStore.WriteAsync(state.FeedHash, json, etag, ct);
+            state.CacheETag = etag;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogWarning(ex, "Failed to cache parsed feed {Hash}.", state.FeedHash);
+        }
+    }
+
     private async Task AnnounceAsync(
-        FeedPollState state, PushStore store, FeedHead head,
-        List<FeedHeadItem> newItems, CancellationToken ct)
+        FeedPollState state, PushStore store, ParsedFeed feed,
+        List<ParsedEpisode> newItems, CancellationToken ct)
     {
         // Backfill guard: an old pubDate on a new-to-us item means the feed
         // re-added history or rotated GUIDs, not that an episode dropped.
@@ -172,15 +205,15 @@ public sealed class FeedPoller(
         if (announceable.Count == 0) return;
 
         var newest = announceable[0];
-        var showTitle = string.IsNullOrEmpty(head.ChannelTitle)
+        var showTitle = string.IsNullOrEmpty(feed.Title)
             ? new Uri(state.FeedUrl).Host
-            : head.ChannelTitle;
+            : feed.Title;
         var alertBody = announceable.Count == 1
             ? (string.IsNullOrEmpty(newest.Title) ? "New episode" : newest.Title)
             : $"{announceable.Count} new episodes";
 
         await store.AnnounceNewEpisodeAsync(
-            state.FeedHash, showTitle, alertBody, newest.Identity, announceable.Count, ct);
+            state.FeedHash, showTitle, alertBody, newest.Guid, announceable.Count, ct);
         _logger.LogInformation("Announced {Count} new episode(s) for {Show} ({Hash}).",
             announceable.Count, showTitle, state.FeedHash);
     }
@@ -192,4 +225,26 @@ public sealed class FeedPoller(
         state.LastPolledAt = DateTimeOffset.UtcNow;
         state.NextPollAt = DateTimeOffset.UtcNow + options.PollInterval + jitter;
     }
+
+    /// Reads the response body into memory with a hard size cap so a
+    /// pathological multi-hundred-MB "feed" can't exhaust the worker.
+    private static async Task<byte[]> ReadBodyAsync(HttpResponseMessage response, CancellationToken ct)
+    {
+        await using var stream = await response.Content.ReadAsStreamAsync(ct);
+        using var buffer = new MemoryStream();
+        var chunk = new byte[81920];
+        int read;
+        while ((read = await stream.ReadAsync(chunk, ct)) > 0)
+        {
+            if (buffer.Length + read > MaxFeedBytes)
+                throw new InvalidOperationException($"Feed exceeds {MaxFeedBytes}-byte cap.");
+            buffer.Write(chunk, 0, read);
+        }
+        return buffer.ToArray();
+    }
+
+    /// 128-bit hex of the served JSON — a content ETag that changes exactly when
+    /// the served bytes change, regardless of the upstream host's ETag habits.
+    private static string ContentHash(byte[] json) =>
+        Convert.ToHexString(SHA256.HashData(json))[..32].ToLowerInvariant();
 }

@@ -15,6 +15,10 @@ public sealed class FeedPollState
     public required string FeedUrl { get; set; }
     public string? ETag { get; set; }
     public string? LastModified { get; set; }
+    /// Content ETag (hash of the served JSON) of the feed blob we last wrote, so
+    /// a poll whose parsed content is unchanged skips a redundant blob upload
+    /// (which would otherwise churn the ETag and defeat client-side 304s).
+    public string? CacheETag { get; set; }
     public List<string> KnownIdentities { get; set; } = [];
     public DateTimeOffset? LastPolledAt { get; set; }
     public int FailureCount { get; set; }
@@ -60,6 +64,7 @@ public sealed class FeedPollStateStore(TableClient table)
                 FeedUrl = entity.GetString("FeedUrl") ?? string.Empty,
                 ETag = entity.GetString("ETag"),
                 LastModified = entity.GetString("LastModified"),
+                CacheETag = entity.GetString("CacheETag"),
                 KnownIdentities = JsonSerializer.Deserialize<List<string>>(
                     entity.GetString("KnownIdentities") ?? "[]") ?? [],
                 LastPolledAt = entity.GetDateTimeOffset("LastPolledAt"),
@@ -80,6 +85,7 @@ public sealed class FeedPollStateStore(TableClient table)
             ["FeedUrl"] = state.FeedUrl,
             ["ETag"] = state.ETag,
             ["LastModified"] = state.LastModified,
+            ["CacheETag"] = state.CacheETag,
             ["KnownIdentities"] = JsonSerializer.Serialize(state.KnownIdentities),
             ["LastPolledAt"] = state.LastPolledAt,
             ["FailureCount"] = state.FailureCount,
