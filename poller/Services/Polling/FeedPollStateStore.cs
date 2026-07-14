@@ -20,6 +20,10 @@ public sealed class FeedPollState
     /// (which would otherwise churn the ETag and defeat client-side 304s).
     public string? CacheETag { get; set; }
     public List<string> KnownIdentities { get; set; } = [];
+    /// Newest episode pubDate this feed has ever shown us. The announce path
+    /// only fires for items strictly newer than this, so a re-seen episode
+    /// (rotated GUID, evicted identity) can't re-announce. Null until first set.
+    public DateTimeOffset? HighWaterPublishedAt { get; set; }
     public DateTimeOffset? LastPolledAt { get; set; }
     public int FailureCount { get; set; }
     public DateTimeOffset NextPollAt { get; set; } = DateTimeOffset.MinValue;
@@ -67,6 +71,7 @@ public sealed class FeedPollStateStore(TableClient table)
                 CacheETag = entity.GetString("CacheETag"),
                 KnownIdentities = JsonSerializer.Deserialize<List<string>>(
                     entity.GetString("KnownIdentities") ?? "[]") ?? [],
+                HighWaterPublishedAt = entity.GetDateTimeOffset("HighWaterPublishedAt"),
                 LastPolledAt = entity.GetDateTimeOffset("LastPolledAt"),
                 FailureCount = entity.GetInt32("FailureCount") ?? 0,
                 NextPollAt = entity.GetDateTimeOffset("NextPollAt") ?? DateTimeOffset.MinValue,
@@ -87,6 +92,7 @@ public sealed class FeedPollStateStore(TableClient table)
             ["LastModified"] = state.LastModified,
             ["CacheETag"] = state.CacheETag,
             ["KnownIdentities"] = JsonSerializer.Serialize(state.KnownIdentities),
+            ["HighWaterPublishedAt"] = state.HighWaterPublishedAt,
             ["LastPolledAt"] = state.LastPolledAt,
             ["FailureCount"] = state.FailureCount,
             ["NextPollAt"] = state.NextPollAt,
