@@ -181,8 +181,28 @@ public sealed class FeedPoller(
                     "Re-baselining {Hash}: no overlap with the known window; seeding {Count} identities silently.",
                     state.FeedHash, identified.Count);
 
-            if (!state.IsFirstObservation && !rebaseline && newItems.Count > 0)
+            // pubDate high-water mark: the newest episode pubDate this feed has
+            // ever shown us. We announce only items strictly newer than it, which
+            // is immune to the two flood sources identity tracking can't fully
+            // stop — GUID rotation (a re-seen item gets a fresh identity) and
+            // known-window eviction — because a re-seen episode never has a
+            // pubDate beyond the mark. Seed it SILENTLY (announce nothing) on a
+            // first observation, a re-baseline, or an install predating the field
+            // (null mark), then only genuinely newer episodes ever announce.
+            var maxPub = feed.Episodes
+                .Select(e => e.PublishedAt)
+                .Where(d => d.HasValue)
+                .Select(d => d!.Value)
+                .DefaultIfEmpty(DateTimeOffset.MinValue)
+                .Max();
+            var seeding = state.IsFirstObservation || rebaseline || state.HighWaterPublishedAt is null;
+
+            if (!seeding && newItems.Count > 0)
                 await AnnounceAsync(state, store, feed, newItems.Select(x => x.Episode).ToList(), ct);
+
+            // Advance the mark to the newest pubDate seen (never rewind).
+            if (maxPub > (state.HighWaterPublishedAt ?? DateTimeOffset.MinValue))
+                state.HighWaterPublishedAt = maxPub;
 
             // Rebuild the known window from the CURRENT feed ordered by pubDate
             // (newest first), then keep previously-known identities no longer
@@ -241,12 +261,19 @@ public sealed class FeedPoller(
         FeedPollState state, PushStore store, ParsedFeed feed,
         List<ParsedEpisode> newItems, CancellationToken ct)
     {
-        // Backfill guard: an old pubDate on a new-to-us item means the feed
-        // re-added history or rotated GUIDs, not that an episode dropped.
-        var freshCutoff = DateTimeOffset.UtcNow - options.AnnouncePubDateWindow;
+        // Announce only items strictly newer than the feed's high-water mark.
+        // The caller skips this method while seeding (first observation /
+        // re-baseline / legacy null row), so in normal operation the mark is
+        // already set; the `?? 14-day window` is a defensive fallback for any
+        // unforeseen path that reaches here with a null mark. This is the
+        // primary backfill/re-announce guard: re-added history, rotated GUIDs,
+        // and evicted-then-re-seen items all carry a pubDate at or below the
+        // mark and are dropped. A null pubDate can't be proven newer, so it's
+        // never announced.
+        var floor = state.HighWaterPublishedAt ?? (DateTimeOffset.UtcNow - options.AnnouncePubDateWindow);
         var announceable = newItems
-            .Where(i => i.PublishedAt is null || i.PublishedAt >= freshCutoff)
-            .OrderByDescending(i => i.PublishedAt ?? DateTimeOffset.MaxValue)
+            .Where(i => i.PublishedAt is { } p && p > floor)
+            .OrderByDescending(i => i.PublishedAt)
             .ToList();
         if (announceable.Count == 0) return;
 
