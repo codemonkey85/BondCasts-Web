@@ -121,17 +121,29 @@ public sealed class FeedPoller(
         try
         {
             using var request = new HttpRequestMessage(HttpMethod.Get, state.FeedUrl);
-            if (!string.IsNullOrEmpty(state.ETag))
-                request.Headers.TryAddWithoutValidation("If-None-Match", state.ETag);
-            if (!string.IsNullOrEmpty(state.LastModified))
-                request.Headers.TryAddWithoutValidation("If-Modified-Since", state.LastModified);
+            // Only revalidate against the origin once we already hold a cached
+            // blob for this feed. A feed tracked before the blob cache existed
+            // (#174) has a stored ETag / Last-Modified but no blob, so an origin
+            // 304 would MarkSuccess and return WITHOUT ever populating the cache
+            // — leaving /feed/{hash} a permanent 404 until the feed happened to
+            // publish. Forcing a full 200 on the first cache-less poll backfills
+            // the blob; every later poll revalidates conditionally as before.
+            if (!string.IsNullOrEmpty(state.CacheETag))
+            {
+                if (!string.IsNullOrEmpty(state.ETag))
+                    request.Headers.TryAddWithoutValidation("If-None-Match", state.ETag);
+                if (!string.IsNullOrEmpty(state.LastModified))
+                    request.Headers.TryAddWithoutValidation("If-Modified-Since", state.LastModified);
+            }
 
             var client = httpClientFactory.CreateClient(HttpClientName);
             using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
 
             if (response.StatusCode == System.Net.HttpStatusCode.NotModified)
             {
-                // Unchanged upstream: the existing cached blob is still valid.
+                // Unchanged upstream, and we sent validators only because a blob
+                // already exists, so that cached blob is still valid. (A first,
+                // cache-less poll skips the validators above and can't land here.)
                 MarkSuccess(state);
                 return;
             }
