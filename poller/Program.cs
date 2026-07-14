@@ -1,4 +1,6 @@
 using Azure.Data.Tables;
+using Azure.Storage.Blobs;
+using BondCasts.Poller.Services.Cache;
 using BondCasts.Poller.Services.Polling;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -21,6 +23,13 @@ var host = new HostBuilder()
             var storage = Environment.GetEnvironmentVariable("AzureWebJobsStorage")
                 ?? "UseDevelopmentStorage=true";
             return new FeedPollStateStore(new TableClient(storage, FeedPollStateStore.TableName));
+        });
+        services.AddSingleton(_ =>
+        {
+            var storage = Environment.GetEnvironmentVariable("AzureWebJobsStorage")
+                ?? "UseDevelopmentStorage=true";
+            var container = new BlobServiceClient(storage).GetBlobContainerClient(FeedCacheStore.ContainerName);
+            return new FeedCacheStore(container);
         });
         services.AddSingleton<FeedPoller>();
     })
