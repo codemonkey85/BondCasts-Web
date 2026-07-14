@@ -1,8 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <!-- Multitargets so both Functions apps can reference it: the api is pinned
-         to net9.0 by the Static Web Apps runtime, the poller runs net10.0. -->
-    <TargetFrameworks>net9.0;net10.0</TargetFrameworks>
+    <!-- Targets net9.0 so BOTH apps can build it: the api is pinned to net9.0 by
+         the Static Web Apps (Oryx) runtime, and the net10.0 poller consumes a
+         net9.0 library fine (downlevel reference). Multitargeting net10.0 broke
+         the SWA build, whose 9.0 SDK can't compile a net10.0 target. -->
+    <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
