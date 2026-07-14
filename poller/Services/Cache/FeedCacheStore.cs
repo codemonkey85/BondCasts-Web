@@ -46,9 +46,12 @@ public sealed class FeedCacheStore(BlobContainerClient container)
         try
         {
             var properties = await container.GetBlobClient(BlobName(feedHash)).GetPropertiesAsync(cancellationToken: ct);
-            return properties.Value.Metadata.TryGetValue(ETagMetadataKey, out var etag)
-                ? etag
-                : properties.Value.ETag.ToString();
+            if (properties.Value.Metadata.TryGetValue(ETagMetadataKey, out var etag))
+                return etag;
+            // Fallback for a blob written outside our path: the Azure blob ETag
+            // is commonly quoted, so strip quotes — the caller re-quotes it and
+            // compares it unquoted, and a quoted value would double up / never match.
+            return properties.Value.ETag.ToString().Trim('"');
         }
         catch (RequestFailedException ex) when (ex.Status == 404)
         {

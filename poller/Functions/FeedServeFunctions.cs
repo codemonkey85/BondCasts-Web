@@ -39,8 +39,10 @@ public sealed class FeedServeFunctions(FeedCacheStore cache, ILogger<FeedServeFu
         if (etag is null)
             return req.CreateResponse(HttpStatusCode.NotFound);
 
+        // If-None-Match may arrive as multiple header lines AND/OR one line
+        // holding a comma-separated list ("a", "b"); flatten both before match.
         if (req.Headers.TryGetValues("If-None-Match", out var providedETags) &&
-            providedETags.Any(candidate => ETagMatches(candidate, etag)))
+            providedETags.SelectMany(v => v.Split(',')).Any(candidate => ETagMatches(candidate, etag)))
         {
             var notModified = req.CreateResponse(HttpStatusCode.NotModified);
             notModified.Headers.Add("ETag", Quote(etag));
@@ -65,12 +67,14 @@ public sealed class FeedServeFunctions(FeedCacheStore cache, ILogger<FeedServeFu
         value.Length == 16 && value.All(c => c is >= '0' and <= '9' or >= 'a' and <= 'f');
 
     /// Compares a client-supplied validator to our stored content hash,
-    /// tolerating the quotes and weak-validator (`W/`) prefix HTTP allows.
+    /// tolerating the quotes, weak-validator (`W/`) prefix, and `*` (matches any
+    /// existing representation) that HTTP allows.
     private static bool ETagMatches(string provided, string stored)
     {
         var value = provided.Trim();
+        if (value == "*") return true;
         if (value.StartsWith("W/", StringComparison.Ordinal)) value = value[2..];
-        return value.Trim('"') == stored;
+        return value.Trim().Trim('"') == stored;
     }
 
     private static string Quote(string etag) => $"\"{etag}\"";
