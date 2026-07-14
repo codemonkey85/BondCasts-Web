@@ -25,6 +25,14 @@ public sealed class PollerOptions
     /// A new-to-us item with a pubDate older than this is treated as backfill
     /// (feed re-added old episodes / rotated GUIDs), not news.
     public TimeSpan AnnouncePubDateWindow { get; } = TimeSpan.FromDays(14);
+
+    /// A single poll that finds more than this many new-to-us fresh items for
+    /// one feed is treated as a flood (a partial re-baseline, evicted history,
+    /// or a rotated-GUID feed) rather than genuine news: the items are still
+    /// absorbed into the known window, but no push is sent. A continuously
+    /// polled feed publishes at most one or two per interval, so this only
+    /// trips on anomalies.
+    public int MaxAnnouncePerCycle { get; } = 3;
 }
 
 /// One poll cycle over every registered feed:
@@ -153,16 +161,40 @@ public sealed class FeedPoller(
             var feed = RssFeedParser.Parse(body, state.FeedUrl);
 
             var known = state.KnownIdentities.ToHashSet();
-            var newItems = feed.Episodes
-                .Select(episode => (Episode: episode, Hash: FeedPollStateStore.IdentityHash(episode.Guid)))
-                .Where(x => !known.Contains(x.Hash))
+            var identified = feed.Episodes
+                .Select(episode => (Episode: episode, Hash: FeedPollStateStore.IdentityHash(StableIdentity(episode))))
                 .ToList();
+            var newItems = identified.Where(x => !known.Contains(x.Hash)).ToList();
 
-            if (!state.IsFirstObservation && newItems.Count > 0)
+            // Re-baseline guard: a non-empty known window with ZERO overlap
+            // against the current feed means the identity scheme changed (a
+            // deploy that altered GUID/identity derivation) or the feed rotated
+            // its whole catalog — not that every episode is genuinely new. Any
+            // count then, including a single item, would be a spurious banner
+            // (a "1 new episode" storm across every feed on deploy), so reseed
+            // silently instead of announcing.
+            var rebaseline = known.Count > 0 && identified.All(x => !known.Contains(x.Hash));
+            if (rebaseline)
+                _logger.LogInformation(
+                    "Re-baselining {Hash}: no overlap with the known window; seeding {Count} identities silently.",
+                    state.FeedHash, identified.Count);
+
+            if (!state.IsFirstObservation && !rebaseline && newItems.Count > 0)
                 await AnnounceAsync(state, store, feed, newItems.Select(x => x.Episode).ToList(), ct);
 
-            // Newest-first merge; SaveAsync caps the window length.
-            state.KnownIdentities = newItems.Select(x => x.Hash).Concat(state.KnownIdentities).ToList();
+            // Rebuild the known window from the CURRENT feed ordered by pubDate
+            // (newest first), then keep previously-known identities no longer
+            // present. Retention is now pubDate-based rather than
+            // document-position based: a recent episode sitting late in a large
+            // feed (.NET Rocks has 2000+ items) can no longer be evicted past
+            // the cap and re-announced every cycle. SaveAsync caps the length.
+            var currentByRecency = identified
+                .OrderByDescending(x => x.Episode.PublishedAt ?? DateTimeOffset.MinValue)
+                .Select(x => x.Hash);
+            state.KnownIdentities = currentByRecency
+                .Concat(state.KnownIdentities)
+                .Distinct()
+                .ToList();
             state.ETag = response.Headers.ETag?.ToString();
             state.LastModified = response.Content.Headers.LastModified?.ToString("R");
             MarkSuccess(state);
@@ -216,6 +248,18 @@ public sealed class FeedPoller(
             .ToList();
         if (announceable.Count == 0) return;
 
+        // Flood guard: an anomalously large fresh batch (a partial re-baseline,
+        // evicted history, or a rotated-GUID feed) is absorbed into the known
+        // window by the caller but not pushed — a continuously polled feed
+        // publishes at most one or two per interval.
+        if (announceable.Count > options.MaxAnnouncePerCycle)
+        {
+            _logger.LogWarning(
+                "Suppressing {Count} announcements for {Hash} (> cap {Cap}); seeding silently.",
+                announceable.Count, state.FeedHash, options.MaxAnnouncePerCycle);
+            return;
+        }
+
         var newest = announceable[0];
         var showTitle = string.IsNullOrEmpty(feed.Title)
             ? new Uri(state.FeedUrl).Host
@@ -228,6 +272,22 @@ public sealed class FeedPoller(
             state.FeedHash, showTitle, alertBody, newest.Guid, announceable.Count, ct);
         _logger.LogInformation("Announced {Count} new episode(s) for {Show} ({Hash}).",
             announceable.Count, showTitle, state.FeedHash);
+    }
+
+    /// Identity used for new-episode detection. When a feed provides no
+    /// &lt;guid&gt;, the parser falls back to the enclosure URL (so shared-link
+    /// keys stay aligned with the app). For tokenized private feeds
+    /// (supportingcast/Patreon) that URL carries a rotating signed token
+    /// (?token=…&amp;expires=…), so a naive identity changes every fetch and the
+    /// episode looks perpetually new — the source of the Vergecast flood. Strip
+    /// the query/fragment in that fallback case only. The announced episodeGUID
+    /// still uses the full episode.Guid, so the app's episode key is unaffected.
+    private static string StableIdentity(ParsedEpisode episode)
+    {
+        if (episode.Guid != episode.EnclosureUrl) return episode.Guid;
+        return Uri.TryCreate(episode.Guid, UriKind.Absolute, out var uri) && !string.IsNullOrEmpty(uri.Query)
+            ? uri.GetLeftPart(UriPartial.Path)
+            : episode.Guid;
     }
 
     private void MarkSuccess(FeedPollState state)
