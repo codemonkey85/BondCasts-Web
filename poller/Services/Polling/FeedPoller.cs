@@ -166,14 +166,16 @@ public sealed class FeedPoller(
                 .ToList();
             var newItems = identified.Where(x => !known.Contains(x.Hash)).ToList();
 
-            // Re-baseline guard: a non-empty known window with ZERO overlap
-            // against the current feed means the identity scheme changed (a
+            // Re-baseline guard: a non-empty known window that the current feed
+            // (which must itself be non-empty — an empty parse is not a
+            // re-baseline) overlaps ZERO of means the identity scheme changed (a
             // deploy that altered GUID/identity derivation) or the feed rotated
             // its whole catalog — not that every episode is genuinely new. Any
             // count then, including a single item, would be a spurious banner
             // (a "1 new episode" storm across every feed on deploy), so reseed
-            // silently instead of announcing.
-            var rebaseline = known.Count > 0 && identified.All(x => !known.Contains(x.Hash));
+            // silently instead of announcing. Derived from the already-computed
+            // counts (all identified items are new ⇒ zero overlap).
+            var rebaseline = known.Count > 0 && identified.Count > 0 && newItems.Count == identified.Count;
             if (rebaseline)
                 _logger.LogInformation(
                     "Re-baselining {Hash}: no overlap with the known window; seeding {Count} identities silently.",
@@ -285,7 +287,10 @@ public sealed class FeedPoller(
     private static string StableIdentity(ParsedEpisode episode)
     {
         if (episode.Guid != episode.EnclosureUrl) return episode.Guid;
-        return Uri.TryCreate(episode.Guid, UriKind.Absolute, out var uri) && !string.IsNullOrEmpty(uri.Query)
+        // GetLeftPart(Path) drops both query and fragment, so strip when either
+        // is present (a signed token can ride in the fragment, not just ?query).
+        return Uri.TryCreate(episode.Guid, UriKind.Absolute, out var uri)
+               && (!string.IsNullOrEmpty(uri.Query) || !string.IsNullOrEmpty(uri.Fragment))
             ? uri.GetLeftPart(UriPartial.Path)
             : episode.Guid;
     }
