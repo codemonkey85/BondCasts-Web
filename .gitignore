@@ -11,3 +11,7 @@ api/local.settings.json
 poller/bin/
 poller/obj/
 poller/local.settings.json
+
+# Shared feeds library build output
+feeds/bin/
+feeds/obj/

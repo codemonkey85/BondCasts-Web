@@ -1,4 +1,4 @@
-using BondCasts.Api.Models;
+using BondCasts.Feeds;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
