@@ -261,13 +261,15 @@ public sealed class FeedPoller(
         FeedPollState state, PushStore store, ParsedFeed feed,
         List<ParsedEpisode> newItems, CancellationToken ct)
     {
-        // Announce only items strictly newer than the feed's high-water mark
-        // (set by the caller before this runs; never null here — seeding covers
-        // that). This is the primary backfill/re-announce guard: re-added
-        // history, rotated GUIDs, and evicted-then-re-seen items all carry a
-        // pubDate at or below the mark and are dropped. A null pubDate can't be
-        // proven newer, so it's never announced. The 14-day window is only a
-        // fallback if the mark is somehow absent.
+        // Announce only items strictly newer than the feed's high-water mark.
+        // The caller skips this method while seeding (first observation /
+        // re-baseline / legacy null row), so in normal operation the mark is
+        // already set; the `?? 14-day window` is a defensive fallback for any
+        // unforeseen path that reaches here with a null mark. This is the
+        // primary backfill/re-announce guard: re-added history, rotated GUIDs,
+        // and evicted-then-re-seen items all carry a pubDate at or below the
+        // mark and are dropped. A null pubDate can't be proven newer, so it's
+        // never announced.
         var floor = state.HighWaterPublishedAt ?? (DateTimeOffset.UtcNow - options.AnnouncePubDateWindow);
         var announceable = newItems
             .Where(i => i.PublishedAt is { } p && p > floor)
