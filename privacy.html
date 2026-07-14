@@ -40,9 +40,11 @@
     <h2>Data we don't collect</h2>
     <p>
       BondCasts has no analytics SDKs, no advertising identifiers, and no
-      third-party tracking. No server of ours ever receives your listening
-      history or personal information, and nothing the app sends anywhere is
-      tied to your name, email, or Apple Account.
+      third-party tracking. We never receive your listening history - what you
+      play, your positions, or your queue - and nothing the app sends anywhere
+      is tied to your name, email, or Apple Account. The only things our own
+      service ever sees are described below: the public feeds you ask us to
+      check, and the requests to fetch them.
     </p>
 
     <h2>New-episode notifications</h2>
@@ -80,11 +82,20 @@
 
     <h2>Podcast content</h2>
     <p>
-      When you subscribe to or play a podcast, the app fetches the show's RSS
-      feed and media files directly from the podcast host you chose. Those
-      third-party hosts may receive your device's IP address and standard
-      request information as part of delivering that content, subject to their
-      own privacy policies.
+      When you play a podcast, the app downloads the audio directly from the
+      podcast host you chose, which may receive your device's IP address and
+      standard request information as part of delivering it, subject to their
+      own privacy policy.
+    </p>
+    <p>
+      To load and check for new episodes, the app may fetch a show's public RSS
+      feed through our own caching service rather than contacting each host
+      directly, so your devices do less work. When it does, our service receives
+      the feed's public web address and your device's IP address in order to
+      answer the request. We use these only to serve the feed and operate the
+      service, we don't tie them to your identity, and there is no account
+      involved. It is the same open-source service described under New-episode
+      notifications, and private or password-protected feeds are never sent to it.
     </p>
 
     <h2>Transcripts and on-device features</h2>
