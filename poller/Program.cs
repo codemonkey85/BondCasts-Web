@@ -16,6 +16,16 @@ var host = new HostBuilder()
         {
             client.Timeout = TimeSpan.FromSeconds(30);
             client.DefaultRequestHeaders.UserAgent.ParseAdd("BondCastsPoller/1.0 (+https://bondcasts.com)");
+        })
+        .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+        {
+            // Feed URLs are user-registered (CloudKit public DB), so every
+            // connection — including each redirect hop, the classic
+            // public-host-302s-to-IMDS bypass — goes through the SSRF guard
+            // (#20). CloudKit's own requests ride the same handler; its host
+            // is public, so the guard is a no-op for them.
+            ConnectCallback = FeedUrlGuard.GuardedConnectAsync,
+            MaxAutomaticRedirections = 5,
         });
         services.AddSingleton<PollerOptions>();
         services.AddSingleton(_ =>

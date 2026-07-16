@@ -128,6 +128,15 @@ public sealed class FeedPoller(
     {
         try
         {
+            // A PolledFeed row is user-writable input (any iCloud account can
+            // register one): refuse anything but plain http(s) before it
+            // reaches the network stack. Resolved-address checks (private
+            // ranges, the IMDS endpoint) happen per-connection in
+            // FeedUrlGuard.GuardedConnectAsync. Throwing here lands in the
+            // normal failure/backoff path below.
+            if (!FeedUrlGuard.TryValidate(state.FeedUrl, out var refusal))
+                throw new InvalidOperationException($"Refusing feed URL: {refusal}.");
+
             using var request = new HttpRequestMessage(HttpMethod.Get, state.FeedUrl);
             // Only revalidate against the origin once we already hold a cached
             // blob for this feed. A feed tracked before the blob cache existed
