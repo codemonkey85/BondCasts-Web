@@ -8,8 +8,8 @@ name: Tests
 on:
   push:
     branches: [main]
+  # No base-branch filter: stacked PRs (branch-on-branch) get CI too.
   pull_request:
-    branches: [main]
 
 jobs:
   test:
