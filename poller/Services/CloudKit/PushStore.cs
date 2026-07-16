@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
 
@@ -14,7 +16,7 @@ public sealed record PolledFeedRow(
 /// read/expire PolledFeed registrations, announce NewEpisode discoveries,
 /// prune old announcements. Record type and field names mirror the app's
 /// ServerPushService (PolledFeed: feedURL/feedHash/lastSeenAt; NewEpisode:
-/// feedHash/showTitle/alertBody/episodeGUID/episodeCount).
+/// feedHash/showTitle/alertBody/episodeGUID/episodeGUIDHash/episodeCount).
 public sealed class PushStore(CloudKitClient cloudKit, ILogger<PushStore> logger)
 {
     private const string PolledFeedType = "PolledFeed";
@@ -86,9 +88,15 @@ public sealed class PushStore(CloudKitClient cloudKit, ILogger<PushStore> logger
         };
         // episodeGUID is only meaningful when count == 1 (deep-link target).
         // Stored untruncated: Apple truncates the PUSH payload's copy at 100
-        // chars on its own; the record keeps the full value.
+        // chars on its own; the record keeps the full value. Because of that
+        // truncation, long URL-shaped GUIDs (the WordPress ?p=… pattern) reach
+        // the app cut off, so also ship a short hash the app can match against
+        // hashes of its own full GUIDs (#19; client side PodcastApp#195).
         if (episodeCount == 1 && !string.IsNullOrEmpty(episodeGuid))
+        {
             fields["episodeGUID"] = new JsonObject { ["value"] = episodeGuid };
+            fields["episodeGUIDHash"] = new JsonObject { ["value"] = GuidHash(episodeGuid) };
+        }
 
         var body = new JsonObject
         {
@@ -185,6 +193,15 @@ public sealed class PushStore(CloudKitClient cloudKit, ILogger<PushStore> logger
             await DeleteRecordsAsync(NewEpisodeType, stale, ct);
         }
     }
+
+    /// First 16 hex chars (lowercase) of SHA-256 over the exact episodeGUID
+    /// string written to the record — the same derivation as the app's
+    /// `FeedURL.feedHash`, so the client recomputes it from its full parsed
+    /// GUID with code it already has. NOT the poller's internal
+    /// `FeedPollStateStore.IdentityHash` (uppercase, and hashes a
+    /// query-stripped identity for tokenized enclosure-URL fallbacks).
+    public static string GuidHash(string guid) =>
+        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(guid)))[..16].ToLowerInvariant();
 
     private static string Truncate(string value) =>
         value.Length <= MaxAlertFieldLength ? value : value[..(MaxAlertFieldLength - 1)] + "…";
