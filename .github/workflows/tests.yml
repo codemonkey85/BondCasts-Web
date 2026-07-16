@@ -1,0 +1,28 @@
+# Runs every test project under tests/ on pull requests and pushes to main.
+# The deploy workflows (deploy-poller.yml, azure-static-web-apps.yml) build
+# but never test; this is the gate that catches wire-contract regressions
+# (e.g. the feed JSON date format, #21) before they ship.
+
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Test
+        run: |
+          for proj in tests/*/*.csproj; do
+            dotnet test "$proj" -c Release --nologo
+          done

@@ -15,3 +15,7 @@ poller/local.settings.json
 # Shared feeds library build output
 feeds/bin/
 feeds/obj/
+
+# Test project build output
+tests/*/bin/
+tests/*/obj/

@@ -10,7 +10,9 @@ namespace BondCasts.Feeds;
 /// `JSONDecoder.dateDecodingStrategy = .iso8601`, whose formatter accepts
 /// `2026-07-13T12:34:56Z` but NOT fractional seconds — the .NET default
 /// (`2026-07-13T12:34:56.1234567+00:00`) would fail to decode and silently
-/// force every client onto the direct-fetch fallback.
+/// force every client onto the direct-fetch fallback. This contract is pinned
+/// by FeedJsonDateFormatTests (tests/BondCasts.Feeds.Tests); a change here
+/// must trip those tests, never production.
 public static class FeedJson
 {
     public static readonly JsonSerializerOptions Options = CreateOptions();
