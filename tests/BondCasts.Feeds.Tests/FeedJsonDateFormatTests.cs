@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using BondCasts.Feeds;
 using Xunit;
 
 namespace BondCasts.Feeds.Tests;
