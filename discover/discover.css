@@ -1,6 +1,8 @@
 :root {
   --signal: #6bdcf6;
   --signal-soft: rgba(107, 220, 246, 0.12);
+  --signal-fill: #6bdcf6;
+  --signal-fill-text: #071522;
   --success: #66d59b;
   --warning: #f0c36d;
   --display-face: "Avenir Next", Avenir, "Segoe UI", sans-serif;
@@ -96,7 +98,7 @@
 .path-line { position: absolute; left: 8%; right: 8%; top: 14px; height: 1px; background: linear-gradient(90deg, var(--signal), var(--border) 54%, var(--border)); }
 .path-stop { position: relative; display: grid; justify-items: center; gap: .55rem; color: var(--muted); font-size: .78rem; font-weight: 600; }
 .path-stop b { display: grid; place-items: center; width: 29px; height: 29px; border: 1px solid var(--border); border-radius: 50%; color: var(--muted); background: var(--bg); font-family: var(--utility-face); font-size: .7rem; }
-.path-stop.is-active b { color: var(--navy); background: var(--signal); border-color: var(--signal); box-shadow: 0 0 0 5px var(--signal-soft); }
+.path-stop.is-active b { color: var(--signal-fill-text); background: var(--signal-fill); border-color: var(--signal-fill); box-shadow: 0 0 0 5px var(--signal-soft); }
 
 .podcast-search {
   grid-column: 1 / -1;
@@ -118,8 +120,8 @@
   border: 0;
   border-radius: 13px;
   padding: .86rem 1.18rem;
-  color: #071522;
-  background: var(--signal);
+  color: var(--signal-fill-text);
+  background: var(--signal-fill);
   font-weight: 750;
   transition: transform .14s ease, filter .14s ease;
 }
@@ -161,6 +163,7 @@
 .inspect-button:hover { border-color: var(--signal); }
 
 .show-inspector { position: sticky; top: 84px; min-height: 26rem; overflow: hidden; border: 1px solid var(--border); border-radius: 22px; background: var(--surface); box-shadow: var(--shadow); }
+.inspector-back { display: none; }
 .inspector-placeholder { display: grid; place-items: center; min-height: 26rem; padding: 2.5rem; text-align: center; }
 .verify-mark { display: grid; place-items: center; width: 50px; height: 50px; margin-bottom: 1rem; border: 1px solid var(--border); border-radius: 50%; color: var(--signal); font-size: 1.25rem; }
 .inspector-placeholder h2 { margin: 0; font-size: 1.3rem; }
@@ -181,16 +184,40 @@
 .show-action-note { margin: .65rem 0 0; color: var(--muted); font-size: .75rem; text-align: center; }
 
 @media (prefers-color-scheme: light) {
+  :root {
+    --signal: #0a6f9c;
+    --signal-soft: rgba(10, 111, 156, .1);
+    --signal-fill: #007fa9;
+    --signal-fill-text: #fff;
+    --success: #177a50;
+    --warning: #8a5a00;
+  }
   .companion-hero { background: radial-gradient(55rem 28rem at 8% 15%, rgba(74, 137, 214, .16), transparent 68%), linear-gradient(#f7fbff, var(--bg)); }
   .companion-hero::before { border-color: rgba(0, 127, 169, .1); }
-  .show-action { color: #071522; }
+  .search-status[data-kind="error"] { color: #b42318; }
 }
 @media (max-width: 820px) {
   .companion-hero .companion-shell, .workspace-grid { grid-template-columns: 1fr; }
   .icloud-card { max-width: 560px; }
-  .show-inspector { position: relative; top: 0; }
+  .show-inspector { position: relative; top: 0; scroll-margin-top: 5.25rem; }
+  .inspector-back {
+    display: flex;
+    width: 100%;
+    padding: .8rem 1.1rem;
+    border: 0;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted);
+    background: var(--surface-2);
+    font-size: .82rem;
+    font-weight: 700;
+    text-align: left;
+  }
+  .inspector-back:hover { color: var(--text); background: var(--signal-soft); }
+  .podcast-result.is-selected { scroll-margin-top: 5.25rem; }
 }
 @media (max-width: 560px) {
+  .discover-page .site-nav { gap: .7rem; }
+  .discover-page .site-nav .nav-home { display: inline-flex; }
   .companion-shell { width: min(100% - 2rem, 1180px); }
   .companion-hero { padding-top: 3.25rem; }
   .hero-copy h1 { font-size: clamp(2.8rem, 14vw, 4.1rem); }

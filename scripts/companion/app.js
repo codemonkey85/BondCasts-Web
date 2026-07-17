@@ -130,6 +130,7 @@ async function selectDirectoryShow(show) {
   renderResults();
   setSearchStatus(`Verifying the feed for “${show.title}”…`);
   setInspectorBusy(show);
+  revealInspectorOnNarrowScreen();
   state.searchController?.abort();
   state.searchController = new AbortController();
 
@@ -156,6 +157,7 @@ function renderInspector() {
   const show = state.resolvedShow;
   if (!show) return;
   elements.inspector.replaceChildren();
+  appendInspectorBackControl();
 
   const art = document.createElement("div");
   art.className = "resolved-art";
@@ -346,6 +348,7 @@ function setSearchStatus(message, kind = "info") {
 
 function setInspectorBusy(show) {
   elements.inspector.replaceChildren();
+  appendInspectorBackControl();
   const placeholder = document.createElement("div");
   placeholder.className = "inspector-placeholder";
   placeholder.append(textElement("span", "↻", "verify-mark"));
@@ -356,12 +359,39 @@ function setInspectorBusy(show) {
 
 function setInspectorError(message) {
   elements.inspector.replaceChildren();
+  appendInspectorBackControl();
   const placeholder = document.createElement("div");
   placeholder.className = "inspector-placeholder";
   placeholder.append(textElement("span", "!", "verify-mark"));
   placeholder.append(textElement("h2", "Feed could not be verified"));
   placeholder.append(textElement("p", message));
   elements.inspector.append(placeholder);
+}
+
+function appendInspectorBackControl() {
+  if (!state.results.length) return;
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "inspector-back";
+  button.textContent = "← Back to results";
+  button.addEventListener("click", returnToSelectedResult);
+  elements.inspector.append(button);
+}
+
+function revealInspectorOnNarrowScreen() {
+  if (!window.matchMedia("(max-width: 820px)").matches) return;
+  elements.inspector.scrollIntoView({ behavior: preferredScrollBehavior(), block: "start" });
+}
+
+function returnToSelectedResult() {
+  const selectedButton = elements.results.querySelector(".podcast-result.is-selected .inspect-button");
+  const target = selectedButton ?? elements.resultsHeading;
+  target.scrollIntoView({ behavior: preferredScrollBehavior(), block: "center" });
+  selectedButton?.focus({ preventScroll: true });
+}
+
+function preferredScrollBehavior() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
 }
 
 function focusCloudKitCard() {
