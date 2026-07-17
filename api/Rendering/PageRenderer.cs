@@ -87,7 +87,7 @@ public sealed partial class PageRenderer
     public string RenderFallback(string kind, string? feedUrl, string originalUrl)
     {
         var body = new StringBuilder();
-        body.Append($"<p class=\"lede\">If you have {SiteName} installed, this link opens the {kind} right in the app. Otherwise, get {SiteName} for iPhone, iPad, and Mac.</p>");
+        body.Append($"<p class=\"lede\">If you have {SiteName} installed, this link opens the {kind} right in the app. Otherwise, get {SiteName} for iPhone, iPad, Mac, and Apple Watch.</p>");
         if (feedUrl is { Length: > 0 })
             body.Append($"<p style=\"color:var(--muted);font-size:.9rem;\">Podcast feed: <a href=\"{HtmlEncode(feedUrl)}\" rel=\"noopener\">{HtmlEncode(feedUrl)}</a></p>");
 
