@@ -56,6 +56,10 @@ public sealed class CompanionFunctions
             var results = await _directory.SearchAsync(term, limit, ct);
             return await Json(req, HttpStatusCode.OK, new { results }, ct, "public, max-age=300");
         }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
         {
             return await Json(req, HttpStatusCode.BadGateway, new { error = "Podcast search is temporarily unavailable." }, ct);
@@ -97,6 +101,10 @@ public sealed class CompanionFunctions
         catch (FeedResolutionException ex)
         {
             return await Json(req, HttpStatusCode.UnprocessableEntity, new { error = ex.Message }, ct);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
         {

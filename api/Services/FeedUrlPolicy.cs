@@ -72,6 +72,9 @@ public static class FeedUrlPolicy
             if (address.IsIPv6LinkLocal || address.IsIPv6Multicast || address.IsIPv6SiteLocal)
                 return false;
             var b = address.GetAddressBytes();
+            // 2001:db8::/32 is reserved for documentation and examples.
+            if (b[0] == 0x20 && b[1] == 0x01 && b[2] == 0x0d && b[3] == 0xb8)
+                return false;
             // fc00::/7 unique-local addresses.
             return (b[0] & 0xfe) != 0xfc;
         }

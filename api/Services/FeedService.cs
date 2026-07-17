@@ -43,7 +43,8 @@ public sealed class FeedService
 
     public async Task<ResolvedFeed> ResolveFeedAsync(string feedUrl, CancellationToken ct)
     {
-        if (!Uri.TryCreate(feedUrl, UriKind.Absolute, out var requested))
+        if (!Uri.TryCreate(feedUrl, UriKind.Absolute, out var requested)
+            || (requested.Scheme != Uri.UriSchemeHttp && requested.Scheme != Uri.UriSchemeHttps))
             throw new UnsafeFeedUrlException("Feed URL must be an absolute http(s) URL.");
 
         var cacheKey = $"resolved-feed:{requested.AbsoluteUri}";

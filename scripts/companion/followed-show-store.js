@@ -48,7 +48,7 @@ export class FollowedShowStoreV1 {
 
   matching(feedURL) {
     const identity = normalizeFeedURL(feedURL);
-    return this.snapshot().filter((record) => record.normalizedFeedURL === identity);
+    return [...this.records.values()].filter((record) => record.normalizedFeedURL === identity);
   }
 
   async follow(resolvedShow) {

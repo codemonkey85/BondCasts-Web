@@ -14,6 +14,7 @@ public sealed class FeedUrlPolicyTests
     [InlineData("169.254.169.254")]
     [InlineData("100.64.0.1")]
     [InlineData("::1")]
+    [InlineData("2001:db8::1")]
     [InlineData("fc00::1")]
     [InlineData("fe80::1")]
     public void RejectsNonPublicAddresses(string value) =>
