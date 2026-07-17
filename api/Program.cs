@@ -15,11 +15,18 @@ var host = new HostBuilder()
         services.AddHttpClient(FeedService.HttpClientName, client =>
         {
             client.Timeout = TimeSpan.FromSeconds(8);
-            client.DefaultRequestHeaders.UserAgent.ParseAdd("BondCastsLinkPreview/1.0 (+https://bondcasts.com)");
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("BondCastsFeedResolver/1.0 (+https://bondcasts.com)");
             client.DefaultRequestHeaders.Accept.ParseAdd("application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.8");
+        }).ConfigurePrimaryHttpMessageHandler(FeedUrlPolicy.CreateSafeHttpMessageHandler);
+
+        services.AddHttpClient(PodcastDirectoryService.HttpClientName, client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(8);
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("BondCastsDirectory/1.0 (+https://bondcasts.com)");
         });
 
         services.AddSingleton<FeedService>();
+        services.AddSingleton<PodcastDirectoryService>();
         services.AddSingleton<PageRenderer>();
     })
     .Build();

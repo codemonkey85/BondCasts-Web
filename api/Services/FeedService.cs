@@ -12,7 +12,8 @@ public sealed class FeedService
     public const string HttpClientName = "feed";
 
     private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(15);
-    private const long MaxFeedBytes = 12 * 1024 * 1024; // guard against pathological feeds
+    private const int MaxRedirects = 5;
+    private const int MaxFeedBytes = 12 * 1024 * 1024;
 
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IMemoryCache _cache;
@@ -29,27 +30,9 @@ public sealed class FeedService
     /// then falls back to a generic preview rather than erroring).
     public async Task<ParsedFeed?> GetFeedAsync(string feedUrl, CancellationToken ct)
     {
-        if (!IsSafeFeedUrl(feedUrl)) return null;
-
-        if (_cache.TryGetValue(feedUrl, out ParsedFeed? cached))
-            return cached;
-
         try
         {
-            var client = _httpClientFactory.CreateClient(HttpClientName);
-            using var response = await client.GetAsync(feedUrl, HttpCompletionOption.ResponseHeadersRead, ct);
-            response.EnsureSuccessStatusCode();
-
-            if (response.Content.Headers.ContentLength is > MaxFeedBytes)
-            {
-                _logger.LogWarning("Feed {FeedUrl} exceeds size cap; skipping.", feedUrl);
-                return null;
-            }
-
-            var xml = await response.Content.ReadAsStringAsync(ct);
-            var feed = RssFeedParser.Parse(xml, feedUrl);
-            _cache.Set(feedUrl, feed, CacheTtl);
-            return feed;
+            return (await ResolveFeedAsync(feedUrl, ct)).Feed;
         }
         catch (Exception ex)
         {
@@ -58,9 +41,91 @@ public sealed class FeedService
         }
     }
 
-    /// Only allow absolute http(s) URLs. Blocks the obvious SSRF footguns
-    /// (file://, non-web schemes) before we make a server-side request.
-    private static bool IsSafeFeedUrl(string feedUrl) =>
-        Uri.TryCreate(feedUrl, UriKind.Absolute, out var uri) &&
-        (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+    public async Task<ResolvedFeed> ResolveFeedAsync(string feedUrl, CancellationToken ct)
+    {
+        if (!Uri.TryCreate(feedUrl, UriKind.Absolute, out var requested)
+            || (requested.Scheme != Uri.UriSchemeHttp && requested.Scheme != Uri.UriSchemeHttps))
+            throw new UnsafeFeedUrlException("Feed URL must be an absolute http(s) URL.");
+
+        var cacheKey = $"resolved-feed:{requested.AbsoluteUri}";
+        if (_cache.TryGetValue(cacheKey, out ResolvedFeed? cached) && cached is not null)
+            return cached;
+
+        var current = requested;
+        var client = _httpClientFactory.CreateClient(HttpClientName);
+        for (var redirect = 0; redirect <= MaxRedirects; redirect++)
+        {
+            if (!await FeedUrlPolicy.IsPublicHttpUrlAsync(current, ct))
+                throw new UnsafeFeedUrlException("Feed URL must resolve to a public internet address.");
+
+            using var request = new HttpRequestMessage(HttpMethod.Get, current);
+            using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
+            if (IsRedirect(response.StatusCode))
+            {
+                if (redirect == MaxRedirects || response.Headers.Location is null)
+                    throw new FeedResolutionException("The feed redirected too many times or returned an invalid redirect.");
+                current = response.Headers.Location.IsAbsoluteUri
+                    ? response.Headers.Location
+                    : new Uri(current, response.Headers.Location);
+                continue;
+            }
+
+            if (!response.IsSuccessStatusCode)
+                throw new FeedResolutionException($"The podcast host returned HTTP {(int)response.StatusCode}.");
+            if (response.Content.Headers.ContentLength is > MaxFeedBytes)
+                throw new FeedResolutionException("The podcast feed is too large to resolve safely.");
+
+            var data = await ReadBoundedAsync(response.Content, ct);
+            ParsedFeed parsed;
+            try
+            {
+                parsed = RssFeedParser.Parse(data, current.AbsoluteUri);
+            }
+            catch (Exception ex) when (ex is FormatException or System.Xml.XmlException)
+            {
+                throw new FeedResolutionException("The URL did not return a valid podcast RSS feed.", ex);
+            }
+            if (string.IsNullOrWhiteSpace(parsed.Title))
+                throw new FeedResolutionException("The podcast feed does not contain a title.");
+
+            var resolved = new ResolvedFeed(requested.AbsoluteUri, current.AbsoluteUri, parsed);
+            _cache.Set(cacheKey, resolved, CacheTtl);
+            return resolved;
+        }
+
+        throw new FeedResolutionException("The podcast feed could not be resolved.");
+    }
+
+    private static async Task<byte[]> ReadBoundedAsync(HttpContent content, CancellationToken ct)
+    {
+        await using var input = await content.ReadAsStreamAsync(ct);
+        using var output = new MemoryStream();
+        var buffer = new byte[32 * 1024];
+        while (true)
+        {
+            var read = await input.ReadAsync(buffer, ct);
+            if (read == 0) break;
+            if (output.Length + read > MaxFeedBytes)
+                throw new FeedResolutionException("The podcast feed is too large to resolve safely.");
+            output.Write(buffer, 0, read);
+        }
+        return output.ToArray();
+    }
+
+    private static bool IsRedirect(System.Net.HttpStatusCode status) => status is
+        System.Net.HttpStatusCode.MovedPermanently or
+        System.Net.HttpStatusCode.Redirect or
+        System.Net.HttpStatusCode.SeeOther or
+        System.Net.HttpStatusCode.TemporaryRedirect or
+        System.Net.HttpStatusCode.PermanentRedirect;
+}
+
+public sealed record ResolvedFeed(string RequestedUrl, string FinalUrl, ParsedFeed Feed);
+
+public sealed class UnsafeFeedUrlException(string message) : Exception(message);
+
+public sealed class FeedResolutionException : Exception
+{
+    public FeedResolutionException(string message) : base(message) { }
+    public FeedResolutionException(string message, Exception innerException) : base(message, innerException) { }
 }

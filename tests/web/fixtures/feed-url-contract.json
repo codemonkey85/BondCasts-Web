@@ -1,0 +1,32 @@
+[
+  {
+    "name": "scheme host case and trailing slash",
+    "input": "HTTP://Example.COM/Feed/",
+    "normalized": "https://example.com/Feed"
+  },
+  {
+    "name": "fragment removed",
+    "input": "https://example.com/feed#frag",
+    "normalized": "https://example.com/feed"
+  },
+  {
+    "name": "default port query order and percent escapes",
+    "input": "http://Example.com:80/feed%2f.xml?b=2&a=1",
+    "normalized": "https://example.com/feed%2F.xml?a=1&b=2"
+  },
+  {
+    "name": "root trailing slash",
+    "input": "https://Example.com/",
+    "normalized": "https://example.com"
+  },
+  {
+    "name": "duplicate query keys use value order",
+    "input": "https://example.com/feed?b=1&a=2&a=1",
+    "normalized": "https://example.com/feed?a=1&a=2&b=1"
+  },
+  {
+    "name": "unparseable input is trimmed only",
+    "input": "  Not A URL/Path  ",
+    "normalized": "Not A URL/Path"
+  }
+]

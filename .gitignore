@@ -19,3 +19,9 @@ feeds/obj/
 # Test project build output
 tests/*/bin/
 tests/*/obj/
+
+# Browser CloudKit configuration (tokens are origin-restricted but must never
+# be copied from the local spike into source control).
+config.local.json
+config.*.local.json
+scripts/companion/config.local.js
