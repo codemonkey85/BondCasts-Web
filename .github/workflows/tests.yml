@@ -21,8 +21,15 @@ jobs:
         with:
           dotnet-version: "10.0.x"
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+
       - name: Test
         run: |
           for proj in tests/*/*.csproj; do
             dotnet test "$proj" -c Release --nologo
           done
+
+      - name: Test web modules
+        run: npm run test:web

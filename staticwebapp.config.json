@@ -2,6 +2,7 @@
   "$schema": "https://json.schemastore.org/staticwebapp.config.json",
   "routes": [
     { "route": "/poller/*", "statusCode": 404 },
+    { "route": "/discover", "rewrite": "/discover/index.html" },
     { "route": "/episode", "rewrite": "/api/episode" },
     { "route": "/show", "rewrite": "/api/show" },
     { "route": "/.well-known/apple-app-site-association", "rewrite": "/.well-known/apple-app-site-association.json" }

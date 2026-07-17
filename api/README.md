@@ -21,6 +21,9 @@ to the same show/episode the app does.
 | --- | --- |
 | `GET /episode?feed=<rss>&guid=<guid>` | Rich episode page |
 | `GET /show?feed=<rss>` | Rich show page |
+| `GET /api/podcasts/search?term=<query>` | Public Apple podcast-directory search |
+| `GET /api/podcasts/resolve?url=<rss>&itunesID=<id>` | Resolve redirects and return verified RSS metadata |
+| `GET /api/companion/config` | Public, environment-backed CloudKit JS configuration |
 
 Static Web Apps rewrites `/episode` → `/api/episode` and `/show` → `/api/show`
 (see `../staticwebapp.config.json`). If the feed is unreachable or the `guid` has
@@ -67,3 +70,7 @@ HTTP triggers, so its timer can't be deployed from here. See `../poller/README.m
 - Episode notes are rendered as plain text (feed HTML is stripped) to avoid XSS.
   Swap in a sanitizer (e.g. `Ganss.Xss`) if you want to preserve safe formatting.
 - Parsed feeds are cached in-memory for 15 minutes to absorb crawler bursts.
+- Feed resolution rejects credentials and private, loopback, link-local, and
+  documentation-only network destinations on the initial URL and every redirect.
+- The CloudKit configuration endpoint may expose only an origin-restricted web
+  API token. Never place a server-to-server CloudKit key in this Functions app.

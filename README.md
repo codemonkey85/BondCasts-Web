@@ -1,8 +1,9 @@
 # bondcasts-web
 
-Marketing, support, and privacy site for **BondCasts**, served at
-[bondcasts.com](https://bondcasts.com) via GitHub Pages. Plain static HTML/CSS —
-no build step.
+Marketing site and web companion for **BondCasts**, served at
+[bondcasts.com](https://bondcasts.com) through Azure Static Web Apps. The
+frontend remains plain HTML/CSS and native JavaScript modules with no build step;
+the companion's public podcast APIs use the existing .NET Azure Functions app.
 
 ## Contents
 
@@ -12,6 +13,8 @@ no build step.
 | `privacy.html` | Privacy policy (required for App Store Connect) |
 | `support.html` | Support page (required for App Store Connect) |
 | `styles.css` | Shared styles (dark/light aware) |
+| `discover/` | Public podcast discovery and private iCloud follow companion |
+| `scripts/companion/` | Native modules for directory, feed identity, and CloudKit adapter V1 |
 | `assets/logo.svg` | Brand mark (chain-link "B" + equalizer; navy→cyan) |
 | `assets/favicon.svg` | Favicon (same mark) |
 | `assets/apple-touch-icon.png` | 180×180 touch icon |
@@ -23,7 +26,11 @@ The brand mark is a **placeholder direction**, not the final app icon — a clea
 play + broadcast-waves glyph on the app's navy→cyan gradient. Regenerate the PNGs
 from the SVG with the snippet in git history if you tweak `logo.svg`.
 
-## Deploying on GitHub Pages
+## Legacy GitHub Pages setup
+
+The production site is moving to Azure Static Web Apps so the companion and
+Functions API share one origin. These settings document the previous static-only
+host and remain useful only until DNS cutover is complete.
 
 1. Push this repo to GitHub.
 2. **Settings → Pages** → Source: *Deploy from a branch* → `main` / root.
@@ -46,6 +53,29 @@ Add a `CNAME` record for `www` → `codemonkey85.github.io` if you want the www
 subdomain to work too.
 
 `bondcasts.app` can keep forwarding to `bondcasts.com` at GoDaddy.
+
+## Web companion configuration
+
+`/discover` keeps search and verified feed previews public. Followed state and
+mutations run directly between CloudKit JS and the signed-in user's private
+iCloud database; the API never receives CloudKit user credentials or private
+records.
+
+Configure these Azure Functions application settings:
+
+| Setting | Purpose |
+| --- | --- |
+| `BONDCASTS_CLOUDKIT_WEB_API_TOKEN` | Origin-restricted CloudKit web API token; its presence enables sign-in |
+| `BONDCASTS_CLOUDKIT_ENVIRONMENT` | `development` or `production` (defaults to `production`) |
+| `BONDCASTS_CLOUDKIT_WRITES_ENABLED` | Must be exactly `true` to expose follow/unfollow mutations |
+
+Restrict the Production token to the exact production origin in CloudKit
+Console. Keep writes disabled until Production create/import/delete validation
+has passed. For local development, put settings in `api/local.settings.json`,
+which is ignored by Git; never copy the spike's `config.*.local.json` files into
+this repository.
+
+Run the native-module contract tests with `npm run test:web`.
 
 ## Universal Links
 

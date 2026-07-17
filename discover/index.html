@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Discover podcasts — BondCasts</title>
+  <meta name="description" content="Find podcasts, verify their RSS feeds, and follow them in BondCasts through your private iCloud library.">
+  <meta name="theme-color" content="#0a0f1e">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/discover/discover.css">
+  <script type="module" src="/scripts/companion/app.js"></script>
+</head>
+<body class="discover-page">
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="/">
+        <img src="/assets/logo.svg" alt="" width="30" height="30">
+        <span>BondCasts</span>
+      </a>
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a class="nav-plain" href="/#features">Features</a>
+        <a class="nav-plain" href="/support.html">Support</a>
+        <a class="nav-cta" href="/discover/" aria-current="page">Discover</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="companion-hero" aria-labelledby="discover-title">
+      <div class="companion-shell">
+        <div class="hero-copy">
+          <p class="companion-eyebrow">BondCasts web companion</p>
+          <h1 id="discover-title">Find a show.<br><span>Keep it everywhere.</span></h1>
+          <p class="companion-lede">
+            Search the public podcast directory or paste an RSS feed. BondCasts verifies the real feed before anything reaches your private iCloud library.
+          </p>
+        </div>
+
+        <aside class="icloud-card" id="icloud-card" aria-labelledby="icloud-heading">
+          <div class="icloud-card-head">
+            <div>
+              <p class="utility-label">Private library</p>
+              <h2 id="icloud-heading">iCloud connection</h2>
+            </div>
+            <span class="connection-dot" id="connection-dot" aria-hidden="true"></span>
+          </div>
+          <p id="icloud-status" class="icloud-status" aria-live="polite">Checking availability…</p>
+          <div class="apple-auth-buttons" id="apple-auth-buttons">
+            <div id="apple-sign-in-button"></div>
+            <div id="apple-sign-out-button"></div>
+          </div>
+          <button class="quiet-button" id="refresh-library" type="button" hidden>Check for changes</button>
+          <p class="privacy-note">Apple authenticates you directly. BondCasts never receives your password or a copy of your private library.</p>
+        </aside>
+
+        <div class="broadcast-path" aria-label="How web follows work">
+          <span class="path-line" aria-hidden="true"></span>
+          <div class="path-stop is-active"><b>1</b><span>Search</span></div>
+          <div class="path-stop"><b>2</b><span>Verify feed</span></div>
+          <div class="path-stop"><b>3</b><span>Follow privately</span></div>
+        </div>
+
+        <form class="podcast-search" id="podcast-search" role="search">
+          <label class="visually-hidden" for="podcast-query">Search podcasts or enter an RSS feed URL</label>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="2"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <input id="podcast-query" name="q" type="search" autocomplete="off" enterkeyhint="search" placeholder="Search podcasts or paste an RSS feed URL">
+          <button type="submit">Find podcasts</button>
+        </form>
+        <p class="search-status" id="search-status" aria-live="polite">Search works without signing in.</p>
+      </div>
+    </section>
+
+    <section class="companion-workspace" aria-labelledby="results-heading">
+      <div class="companion-shell workspace-grid">
+        <div class="results-column">
+          <div class="workspace-heading">
+            <div>
+              <p class="utility-label">Public directory</p>
+              <h2 id="results-heading">Start with a name or feed URL</h2>
+            </div>
+            <span id="result-count"></span>
+          </div>
+          <div class="empty-result" id="empty-result">
+            <div class="empty-waves" aria-hidden="true"><i></i><i></i><i></i></div>
+            <p>Try a show title, creator, topic, or a complete RSS feed address.</p>
+          </div>
+          <ol class="podcast-results" id="podcast-results"></ol>
+        </div>
+
+        <aside class="show-inspector" id="show-inspector" aria-labelledby="inspector-title">
+          <div class="inspector-placeholder">
+            <span class="verify-mark" aria-hidden="true">✓</span>
+            <h2 id="inspector-title">Feed verification happens here</h2>
+            <p>Choose a result and BondCasts will follow redirects, parse its RSS feed, and show the metadata that will sync.</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <a class="brand" href="/"><img src="/assets/logo.svg" alt="" width="26" height="26"><span>BondCasts</span></a>
+      <span>Your listening stays yours.</span>
+      <nav><a href="/support.html">Support</a><a href="/privacy.html">Privacy</a></nav>
+    </div>
+  </footer>
+</body>
+</html>
