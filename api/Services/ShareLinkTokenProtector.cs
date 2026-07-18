@@ -89,10 +89,18 @@ public sealed class ShareLinkTokenProtector
             if (string.IsNullOrWhiteSpace(encodedPem))
                 continue;
 
-            var pem = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(encodedPem));
-            var rsa = RSA.Create();
-            rsa.ImportFromPem(pem);
-            keys[keyId] = rsa;
+            RSA? rsa = null;
+            try
+            {
+                var pem = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(encodedPem));
+                rsa = RSA.Create();
+                rsa.ImportFromPem(pem);
+                keys[keyId] = rsa;
+            }
+            catch (Exception ex) when (ex is ArgumentException or CryptographicException or FormatException)
+            {
+                rsa?.Dispose();
+            }
         }
 
         return keys;

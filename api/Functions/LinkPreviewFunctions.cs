@@ -78,7 +78,7 @@ public sealed class LinkPreviewFunctions
         var payload = _tokens.ResolveEpisode(token);
         return payload is null || payload.Guid is null
             ? await Html(req, _renderer.RenderOpaqueFallback("episode", token, req.Url.ToString()))
-            : await RenderResolvedEpisode(req, payload.Feed, payload.Guid, req.Url.ToString(), ct);
+            : await RenderResolvedEpisode(req, payload.Feed, payload.Guid, req.Url.ToString(), ct, opaqueFallbackToken: token);
     }
 
     [Function("shared-show")]
@@ -124,7 +124,8 @@ public sealed class LinkPreviewFunctions
         string feedUrl,
         string guid,
         string canonical,
-        CancellationToken ct)
+        CancellationToken ct,
+        string? opaqueFallbackToken = null)
     {
         var feed = await _feeds.GetFeedAsync(feedUrl, ct);
         var episode = feed?.Episodes.FirstOrDefault(e => string.Equals(e.Guid, guid, StringComparison.Ordinal));
@@ -134,6 +135,9 @@ public sealed class LinkPreviewFunctions
             // Feed unreachable, or the guid has aged out of the feed window
             // (the same limitation the app hits) — serve the generic card.
             _logger.LogInformation("Episode not resolved (feed={FeedNull}, guid found={Found}).", feed is null, episode is not null);
+            if (!string.IsNullOrEmpty(opaqueFallbackToken))
+                return await Html(req, _renderer.RenderOpaqueFallback("episode", opaqueFallbackToken, canonical));
+
             return await Html(req, _renderer.RenderFallback("episode", feedUrl, canonical));
         }
 

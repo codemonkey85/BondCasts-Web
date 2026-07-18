@@ -60,6 +60,27 @@ public sealed class ShareLinkTokenProtectorTests
         Assert.Null(protector.ResolveShow(token));
     }
 
+    [Fact]
+    public void IgnoresInvalidEnvironmentKeyMaterial()
+    {
+        var previousIds = Environment.GetEnvironmentVariable("ShareLinks__KeyIds");
+        var previousKey = Environment.GetEnvironmentVariable("ShareLinks__PrivateKeys__2026_07");
+        try
+        {
+            Environment.SetEnvironmentVariable("ShareLinks__KeyIds", "2026-07");
+            Environment.SetEnvironmentVariable("ShareLinks__PrivateKeys__2026_07", "not-base64");
+
+            var protector = new ShareLinkTokenProtector();
+
+            Assert.Null(protector.ResolveShow("v1.2026-07.invalid.invalid.invalid"));
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("ShareLinks__KeyIds", previousIds);
+            Environment.SetEnvironmentVariable("ShareLinks__PrivateKeys__2026_07", previousKey);
+        }
+    }
+
     private static string Token(RSA rsa, string keyId, object payload)
     {
         var plainText = JsonSerializer.SerializeToUtf8Bytes(payload);
