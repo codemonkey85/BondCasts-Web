@@ -79,17 +79,17 @@
 .connection-dot[data-state="attention"] { background: var(--warning); box-shadow: 0 0 0 5px color-mix(in srgb, var(--warning) 14%, transparent); }
 .icloud-status { min-height: 2.8rem; margin: 1rem 0; color: var(--muted); font-size: .94rem; line-height: 1.45; }
 .apple-auth-buttons { min-height: 36px; display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
-.icloud-auth-button {
-  min-height: 40px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: .55rem .9rem;
-  font-weight: 700;
+.apple-auth-buttons[hidden] { display: none; }
+.icloud-compatibility {
+  margin: -.3rem 0 1rem;
+  padding: .8rem .9rem;
+  border: 1px solid color-mix(in srgb, var(--warning) 42%, var(--border));
+  border-radius: 12px;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--warning) 7%, var(--surface-2));
+  font-size: .82rem;
+  line-height: 1.45;
 }
-.icloud-auth-button.is-sign-in { color: #111; background: #fff; border-color: #111; }
-.icloud-auth-button.is-sign-out { color: var(--muted); background: transparent; }
-.icloud-auth-button:hover { filter: brightness(1.08); }
-.icloud-auth-button[hidden] { display: none; }
 .quiet-button {
   border: 0;
   padding: .25rem 0;
@@ -239,7 +239,7 @@
 .resolved-body .library-setup { margin: .9rem 0 0; }
 .library-setup.is-compact .library-setup-actions { grid-template-columns: 1fr; }
 
-.library-setup-action:focus-visible, .show-website-link:focus-visible, .quiet-button:focus-visible, .icloud-auth-button:focus-visible,
+.library-setup-action:focus-visible, .show-website-link:focus-visible, .quiet-button:focus-visible,
 .inspect-button:focus-visible, .show-action:focus-visible, .inspector-back:focus-visible {
   outline: 3px solid var(--signal);
   outline-offset: 3px;

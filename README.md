@@ -75,17 +75,11 @@ has passed. For local development, put settings in `api/local.settings.json`,
 which is ignored by Git; never copy the spike's `config.*.local.json` files into
 this repository.
 
-Each browser origin needs a CloudKit web API token configured with **URL
-Redirect**, not Post Message. Set the callback to the same-origin Discover page:
-
-- Production: `https://bondcasts.com/discover/`
-- Azure preview: `https://<preview-host>/discover/`
-
-Use a separate token for each preview host because a token has one callback
-destination. The Discover client sends the browser to Apple's authentication
-page, consumes the returned `ckWebAuthToken`, removes it from the address bar,
-and lets CloudKit JS rotate and persist the session. This full-page callback is
-compatible with Safari's cross-site tracking protection.
+CloudKit web authentication currently fails in Safari on macOS when Safari's
+default cross-site tracking protection is enabled. The companion avoids opening
+an authentication flow that cannot complete there and keeps public search
+available; iPhone, iPad, and other supported desktop browsers can still connect
+to iCloud.
 
 Run the native-module contract tests with `npm run test:web`.
 
