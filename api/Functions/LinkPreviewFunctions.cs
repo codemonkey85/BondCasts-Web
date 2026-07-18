@@ -180,8 +180,27 @@ public sealed class LinkPreviewFunctions
         if (segments.Length != 2 || !string.Equals(segments[0], prefix, StringComparison.Ordinal))
             return null;
 
+        if (HasMalformedPercentEncoding(segments[1]))
+            return null;
+
         var token = Uri.UnescapeDataString(segments[1]);
         return string.IsNullOrWhiteSpace(token) ? null : token;
+    }
+
+    private static bool HasMalformedPercentEncoding(string value)
+    {
+        for (var index = 0; index < value.Length; index++)
+        {
+            if (value[index] != '%')
+                continue;
+
+            if (index + 2 >= value.Length
+                || !Uri.IsHexDigit(value[index + 1])
+                || !Uri.IsHexDigit(value[index + 2]))
+                return true;
+        }
+
+        return false;
     }
 
     private static async Task<HttpResponseData> Html(HttpRequestData req, string html)

@@ -20,6 +20,7 @@ public sealed class SharedLinkRouteRecoveryTests
     [InlineData("/api/s/*", "s")]
     [InlineData("/s/token/extra", "s")]
     [InlineData("/e/token", "s")]
+    [InlineData("/s/%ZZ", "s")]
     [InlineData("", "s")]
     public void RejectsUnexpectedOriginalPathShapes(string value, string prefix)
     {
