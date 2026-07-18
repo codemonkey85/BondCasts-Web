@@ -14,7 +14,7 @@ public sealed partial class PageRenderer
     private const string SiteName = "BondCasts";
     private const string DefaultImage = "https://bondcasts.com/assets/apple-touch-icon.png";
 
-    public string RenderEpisode(ParsedFeed feed, ParsedEpisode episode, string originalUrl)
+    public string RenderEpisode(ParsedFeed feed, ParsedEpisode episode, string originalUrl, string? openUrl = null)
     {
         var showTitle = Coalesce(feed.Title, SiteName);
         var epTitle = Coalesce(episode.Title, "Episode");
@@ -49,10 +49,11 @@ public sealed partial class PageRenderer
             bodyHtml: body,
             linksHtml: links,
             openLabel: "Open episode in BondCasts",
-            originalUrl: originalUrl);
+            originalUrl: originalUrl,
+            openUrl: openUrl);
     }
 
-    public string RenderShow(ParsedFeed feed, string originalUrl)
+    public string RenderShow(ParsedFeed feed, string originalUrl, string? openUrl = null)
     {
         var showTitle = Coalesce(feed.Title, SiteName);
         var artwork = feed.ArtworkUrl ?? string.Empty;
@@ -78,13 +79,14 @@ public sealed partial class PageRenderer
             bodyHtml: body,
             linksHtml: links,
             openLabel: "Open podcast in BondCasts",
-            originalUrl: originalUrl);
+            originalUrl: originalUrl,
+            openUrl: openUrl);
     }
 
     /// The generic fallback when the feed can't be fetched or the guid isn't
     /// found — mirrors the old static episode.html/show.html so a link never
     /// looks broken.
-    public string RenderFallback(string kind, string? feedUrl, string originalUrl)
+    public string RenderFallback(string kind, string? feedUrl, string originalUrl, string? openUrl = null)
     {
         var body = new StringBuilder();
         body.Append($"<p class=\"lede\">If you have {SiteName} installed, this link opens the {kind} right in the app. Otherwise, get {SiteName} for iPhone, iPad, Mac, and Apple Watch.</p>");
@@ -103,13 +105,14 @@ public sealed partial class PageRenderer
             bodyHtml: body.ToString(),
             linksHtml: string.Empty,
             openLabel: "Get BondCasts",
-            originalUrl: originalUrl);
+            originalUrl: originalUrl,
+            openUrl: openUrl);
     }
 
     /// Fallback for opaque path-based links (`/e/<id>` and `/s/<id>`). The id is
     /// intentionally not rendered into the page; the app can resolve it locally,
     /// and a later short-link store can hydrate rich metadata server-side.
-    public string RenderOpaqueFallback(string kind, string? id, string originalUrl)
+    public string RenderOpaqueFallback(string kind, string? id, string originalUrl, string? openUrl = null)
     {
         _ = id; // Deliberately not rendered; opaque ids should not leak into HTML.
         var body = new StringBuilder();
@@ -127,14 +130,16 @@ public sealed partial class PageRenderer
             bodyHtml: body.ToString(),
             linksHtml: string.Empty,
             openLabel: "Get BondCasts",
-            originalUrl: originalUrl);
+            originalUrl: originalUrl,
+            openUrl: openUrl);
     }
 
     private static string RenderPage(
         string documentTitle, string ogTitle, string ogDescription, string ogImage,
         string ogType, string heroImage, string headingHtml, string? subtitleHtml,
-        string bodyHtml, string linksHtml, string openLabel, string originalUrl)
+        string bodyHtml, string linksHtml, string openLabel, string originalUrl, string? openUrl)
     {
+        openUrl = SafeOpenUrl(openUrl) is { Length: > 0 } safeOpenUrl ? safeOpenUrl : "/";
         // The visible hero: cover art (when the feed has real artwork) beside the
         // title + subtitle. Art is cross-origin (the podcast host's CDN), so no
         // referrer is sent and decoding is async to keep first paint snappy.
@@ -196,7 +201,7 @@ public sealed partial class PageRenderer
             {bodyHtml}
             {linksHtml}
             <div class="callout">
-              <a class="brand" href="/">{HtmlEncode(openLabel)}</a>
+              <a class="brand" href="{HtmlEncode(openUrl)}">{HtmlEncode(openLabel)}</a>
             </div>
           </main>
 
@@ -253,6 +258,14 @@ public sealed partial class PageRenderer
         return Uri.TryCreate(url, UriKind.Absolute, out var u)
                && (u.Scheme == Uri.UriSchemeHttp || u.Scheme == Uri.UriSchemeHttps)
             ? url
+            : string.Empty;
+    }
+
+    private static string SafeOpenUrl(string? url)
+    {
+        var safe = SafeUrl(url);
+        return safe.StartsWith("https://bondcasts.com/", StringComparison.Ordinal)
+            ? safe
             : string.Empty;
     }
 

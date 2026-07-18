@@ -76,10 +76,11 @@ public sealed class LinkPreviewFunctions
         CancellationToken ct)
     {
         token = EffectiveSharedLinkToken(req, "e", token);
+        var canonical = CanonicalSharedLinkUrl("e", token);
         var payload = _tokens.ResolveEpisode(token);
         return payload is null || payload.Guid is null
-            ? await Html(req, _renderer.RenderOpaqueFallback("episode", token, req.Url.ToString()))
-            : await RenderResolvedEpisode(req, payload.Feed, payload.Guid, req.Url.ToString(), ct, opaqueFallbackToken: token);
+            ? await Html(req, _renderer.RenderOpaqueFallback("episode", token, canonical, openUrl: canonical))
+            : await RenderResolvedEpisode(req, payload.Feed, payload.Guid, canonical, ct, opaqueFallbackToken: token, openUrl: canonical);
     }
 
     [Function("shared-show")]
@@ -89,14 +90,15 @@ public sealed class LinkPreviewFunctions
         CancellationToken ct)
     {
         token = EffectiveSharedLinkToken(req, "s", token);
+        var canonical = CanonicalSharedLinkUrl("s", token);
         var payload = _tokens.ResolveShow(token);
         if (payload is null)
-            return await Html(req, _renderer.RenderOpaqueFallback("podcast", token, req.Url.ToString()));
+            return await Html(req, _renderer.RenderOpaqueFallback("podcast", token, canonical, openUrl: canonical));
 
         var feed = await _feeds.GetFeedAsync(payload.Feed, ct);
         return feed is null
-            ? await Html(req, _renderer.RenderOpaqueFallback("podcast", token, req.Url.ToString()))
-            : await Html(req, _renderer.RenderShow(feed, req.Url.ToString()));
+            ? await Html(req, _renderer.RenderOpaqueFallback("podcast", token, canonical, openUrl: canonical))
+            : await Html(req, _renderer.RenderShow(feed, canonical, openUrl: canonical));
     }
 
     [Function("resolve-shared-episode")]
@@ -127,7 +129,8 @@ public sealed class LinkPreviewFunctions
         string guid,
         string canonical,
         CancellationToken ct,
-        string? opaqueFallbackToken = null)
+        string? opaqueFallbackToken = null,
+        string? openUrl = null)
     {
         var feed = await _feeds.GetFeedAsync(feedUrl, ct);
         var episode = feed?.Episodes.FirstOrDefault(e => string.Equals(e.Guid, guid, StringComparison.Ordinal));
@@ -138,12 +141,17 @@ public sealed class LinkPreviewFunctions
             // (the same limitation the app hits) — serve the generic card.
             _logger.LogInformation("Episode not resolved (feed={FeedNull}, guid found={Found}).", feed is null, episode is not null);
             if (!string.IsNullOrEmpty(opaqueFallbackToken))
-                return await Html(req, _renderer.RenderOpaqueFallback("episode", opaqueFallbackToken, canonical));
+                return await Html(req, _renderer.RenderOpaqueFallback("episode", opaqueFallbackToken, canonical, openUrl: openUrl));
 
             return await Html(req, _renderer.RenderFallback("episode", feedUrl, canonical));
         }
 
-        return await Html(req, _renderer.RenderEpisode(feed, episode, canonical));
+        return await Html(req, _renderer.RenderEpisode(feed, episode, canonical, openUrl: openUrl));
+    }
+
+    private static string CanonicalSharedLinkUrl(string prefix, string token)
+    {
+        return $"https://bondcasts.com/{prefix}/{Uri.EscapeDataString(token)}";
     }
 
     private static string EffectiveSharedLinkToken(HttpRequestData req, string prefix, string routeToken)
