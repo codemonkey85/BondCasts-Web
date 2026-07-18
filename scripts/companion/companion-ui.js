@@ -1,11 +1,12 @@
 export const BONDCASTS_INSTALL_URL = "https://testflight.apple.com/join/fytFVhx2";
 
 export function createShowWebsiteLink(document, websiteURL) {
-  if (!isAbsoluteHTTPURL(websiteURL)) return null;
+  const normalizedWebsiteURL = normalizeAbsoluteHTTPURL(websiteURL);
+  if (!normalizedWebsiteURL) return null;
 
   const link = document.createElement("a");
   link.className = "show-website-link";
-  link.href = websiteURL;
+  link.href = normalizedWebsiteURL;
   link.target = "_blank";
   link.rel = "noopener noreferrer";
   link.textContent = "Visit show website";
@@ -69,12 +70,20 @@ export function createLibrarySetupPanel(document, options = {}) {
 }
 
 export function isAbsoluteHTTPURL(value) {
-  if (typeof value !== "string" || !/^https?:\/\//i.test(value.trim())) return false;
+  return normalizeAbsoluteHTTPURL(value) !== null;
+}
+
+function normalizeAbsoluteHTTPURL(value) {
+  if (typeof value !== "string") return null;
+  const normalizedValue = value.trim();
+  if (!/^https?:\/\//i.test(normalizedValue)) return null;
   try {
-    const url = new URL(value);
-    return Boolean(url.hostname) && (url.protocol === "http:" || url.protocol === "https:");
+    const url = new URL(normalizedValue);
+    return Boolean(url.hostname) && (url.protocol === "http:" || url.protocol === "https:")
+      ? normalizedValue
+      : null;
   } catch {
-    return false;
+    return null;
   }
 }
 

@@ -18,6 +18,14 @@ test("resolved show website renders as a protected, keyboard-accessible link", (
   assert.equal(link.rel, "noopener noreferrer");
 });
 
+test("resolved show website trims surrounding whitespace before rendering", () => {
+  const document = new FakeDocument();
+  const link = createShowWebsiteLink(document, "  https://publisher.example/show  ");
+
+  assert.ok(link);
+  assert.equal(link.href, "https://publisher.example/show");
+});
+
 test("resolved show website is omitted for missing or unsafe URLs", () => {
   const document = new FakeDocument();
   assert.equal(createShowWebsiteLink(document, null), null);
