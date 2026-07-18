@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
   <title>Discover podcasts — BondCasts</title>
   <meta name="description" content="Find podcasts, verify their RSS feeds, and follow them in BondCasts through your private iCloud library.">
   <meta name="theme-color" content="#0a0f1e">
@@ -52,8 +53,8 @@
           <p id="icloud-status" class="icloud-status" aria-live="polite">Checking availability…</p>
           <div id="icloud-onboarding" hidden></div>
           <div class="apple-auth-buttons" id="apple-auth-buttons">
-            <div id="apple-sign-in-button"></div>
-            <div id="apple-sign-out-button"></div>
+            <button class="icloud-auth-button is-sign-in" id="icloud-sign-in" type="button" hidden>Sign in with Apple ID</button>
+            <button class="icloud-auth-button is-sign-out" id="icloud-sign-out" type="button" hidden>Sign out</button>
           </div>
           <button class="quiet-button" id="refresh-library" type="button" hidden>Check for changes</button>
           <p class="privacy-note">Apple authenticates you directly. BondCasts never receives your password or a copy of your private library.</p>

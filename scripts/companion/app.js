@@ -1,4 +1,5 @@
 import { createCloudKitClient, loadCompanionConfiguration } from "./cloudkit-client.js";
+import { consumeCloudKitWebAuthToken, requestCloudKitSignInURL } from "./cloudkit-auth.js";
 import { createLibrarySetupPanel, createShowWebsiteLink } from "./companion-ui.js";
 import { resolvePodcast, searchPodcasts } from "./directory-client.js";
 import { CompanionError } from "./errors.js";
@@ -17,6 +18,8 @@ const elements = {
   iCloudCard: document.getElementById("icloud-card"),
   iCloudStatus: document.getElementById("icloud-status"),
   iCloudOnboarding: document.getElementById("icloud-onboarding"),
+  iCloudSignIn: document.getElementById("icloud-sign-in"),
+  iCloudSignOut: document.getElementById("icloud-sign-out"),
   connectionDot: document.getElementById("connection-dot"),
   refreshLibrary: document.getElementById("refresh-library")
 };
@@ -30,13 +33,17 @@ const state = {
   cloudKitConfiguration: null,
   store: null,
   followedShows: [],
+  cloudIdentityPresent: false,
   cloudState: "loading",
   cloudMessage: "Checking availability…",
-  operationPending: false
+  operationPending: false,
+  authPending: false
 };
 
 elements.form.addEventListener("submit", handleSearch);
 elements.refreshLibrary.addEventListener("click", refreshLibrary);
+elements.iCloudSignIn.addEventListener("click", beginCloudKitSignIn);
+elements.iCloudSignOut.addEventListener("click", signOutOfCloudKit);
 window.addEventListener("online", () => setSearchStatus("Back online. Search and iCloud changes are available."));
 window.addEventListener("offline", () => setSearchStatus("You’re offline. Existing results remain visible.", "error"));
 
@@ -252,27 +259,44 @@ async function mutateFollow(shouldFollow) {
 
 async function initializeCloudKit() {
   try {
+    const webAuthToken = consumeCloudKitWebAuthToken();
     state.cloudKitConfiguration = await loadCompanionConfiguration();
     if (!state.cloudKitConfiguration.enabled) {
       setCloudState("unavailable", "iCloud follow controls are not configured on this environment.");
       return;
     }
-    state.cloudKitClient = await createCloudKitClient(state.cloudKitConfiguration, {
-      signIn: "apple-sign-in-button",
-      signOut: "apple-sign-out-button"
-    });
+    state.cloudKitClient = await createCloudKitClient(state.cloudKitConfiguration, { webAuthToken });
     state.cloudKitClient.subscribe((identity) => {
+      state.cloudIdentityPresent = Boolean(identity);
       if (identity) void connectLibrary();
       else disconnectLibrary();
     });
     setCloudState("signed-out", "Sign in with iCloud to match results against your BondCasts library.");
-    await state.cloudKitClient.setUpAuth();
-    // The spike found identity labels can be stale even while private database
-    // access succeeds, so use a real private-zone read as the authority.
-    await connectLibrary();
+    const identity = await state.cloudKitClient.setUpAuth();
+    // Identity labels can be stale, so a real private-zone read remains the
+    // authority after CloudKit confirms that an authenticated session exists.
+    if (identity) await connectLibrary();
   } catch (error) {
     handleCloudError(error);
   }
+}
+
+async function beginCloudKitSignIn() {
+  if (!state.cloudKitClient || state.authPending) return;
+  state.authPending = true;
+  setCloudState("loading", "Opening Apple’s secure sign-in page…");
+  try {
+    const destination = await requestCloudKitSignInURL(state.cloudKitConfiguration);
+    window.location.assign(destination);
+  } catch (error) {
+    state.authPending = false;
+    setCloudState("signed-out", error?.message || "Apple sign-in could not be opened. Try again.");
+  }
+}
+
+function signOutOfCloudKit() {
+  if (!state.cloudKitClient) return;
+  state.cloudKitClient.signOut();
 }
 
 let libraryConnectionPromise;
@@ -318,6 +342,7 @@ async function refreshLibrary() {
 }
 
 function disconnectLibrary() {
+  state.cloudIdentityPresent = false;
   state.store = null;
   state.followedShows = [];
   elements.refreshLibrary.hidden = true;
@@ -351,6 +376,8 @@ function setCloudState(nextState, message) {
 
 function updateCloudKitDisplay() {
   elements.iCloudStatus.textContent = state.cloudState === "connected" ? libraryCountMessage() : state.cloudMessage;
+  elements.iCloudSignIn.hidden = state.cloudIdentityPresent || state.cloudState !== "signed-out";
+  elements.iCloudSignOut.hidden = !state.cloudIdentityPresent;
   const setupRequired = state.cloudState === "setup-required";
   elements.iCloudOnboarding.hidden = !setupRequired;
   elements.iCloudOnboarding.replaceChildren(...(setupRequired

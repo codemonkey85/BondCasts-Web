@@ -14,7 +14,7 @@ export async function loadCompanionConfiguration() {
   return response.json();
 }
 
-export async function createCloudKitClient(configuration, buttonIDs) {
+export async function createCloudKitClient(configuration, options = {}) {
   if (!configuration?.enabled) {
     throw new CompanionError("unavailable", "iCloud follow controls are not enabled on this site yet.");
   }
@@ -23,16 +23,17 @@ export async function createCloudKitClient(configuration, buttonIDs) {
   }
 
   const CloudKit = await loadCloudKitJS();
+  const apiTokenAuth = {
+    apiToken: configuration.apiToken,
+    persist: true
+  };
+  if (options.webAuthToken) apiTokenAuth.ckWebAuthToken = options.webAuthToken;
+
   CloudKit.configure({
     containers: [{
       containerIdentifier: configuration.containerIdentifier,
       environment: configuration.environment,
-      apiTokenAuth: {
-        apiToken: configuration.apiToken,
-        persist: true,
-        signInButton: { id: buttonIDs.signIn },
-        signOutButton: { id: buttonIDs.signOut }
-      }
+      apiTokenAuth
     }]
   });
 
@@ -64,6 +65,10 @@ export async function createCloudKitClient(configuration, buttonIDs) {
       } catch (error) {
         throw classifyCloudKitError(error);
       }
+    },
+    signOut() {
+      container.signOut();
+      emit(null);
     },
     async openFollowedShowStore() {
       let response;
