@@ -75,6 +75,7 @@ public sealed class LinkPreviewFunctions
         string token,
         CancellationToken ct)
     {
+        LogSharedLinkRewriteProbe(req, "episode", token);
         var payload = _tokens.ResolveEpisode(token);
         return payload is null || payload.Guid is null
             ? await Html(req, _renderer.RenderOpaqueFallback("episode", token, req.Url.ToString()))
@@ -87,6 +88,7 @@ public sealed class LinkPreviewFunctions
         string token,
         CancellationToken ct)
     {
+        LogSharedLinkRewriteProbe(req, "show", token);
         var payload = _tokens.ResolveShow(token);
         if (payload is null)
             return await Html(req, _renderer.RenderOpaqueFallback("podcast", token, req.Url.ToString()));
@@ -142,6 +144,58 @@ public sealed class LinkPreviewFunctions
         }
 
         return await Html(req, _renderer.RenderEpisode(feed, episode, canonical));
+    }
+
+    private void LogSharedLinkRewriteProbe(HttpRequestData req, string kind, string token)
+    {
+        if (token != "*")
+            return;
+
+        var headerNames = req.Headers
+            .Select(header => header.Key)
+            .Order(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        var candidateHeaders = new[]
+        {
+            "x-ms-original-url",
+            "x-original-url",
+            "x-forwarded-url",
+            "x-forwarded-uri",
+            "x-forwarded-path",
+            "x-arr-original-url",
+            "referer"
+        };
+        var candidateShapes = candidateHeaders
+            .Select(name => HeaderShape(req, name))
+            .Where(shape => shape is not null)
+            .ToArray();
+
+        _logger.LogInformation(
+            "Shared link SWA rewrite probe: kind={Kind}, requestPath={Path}, headerNames={HeaderNames}, candidateHeaderShapes={CandidateHeaderShapes}",
+            kind,
+            req.Url.AbsolutePath,
+            string.Join(",", headerNames),
+            string.Join(",", candidateShapes));
+    }
+
+    private static string? HeaderShape(HttpRequestData req, string name)
+    {
+        if (!req.Headers.TryGetValues(name, out var values))
+            return null;
+
+        var valueShape = values
+            .Select(RedactedSharedLinkShape)
+            .FirstOrDefault(shape => shape is not null);
+        return valueShape is null ? $"{name}=present" : $"{name}={valueShape}";
+    }
+
+    private static string? RedactedSharedLinkShape(string value)
+    {
+        if (value.Contains("/e/", StringComparison.OrdinalIgnoreCase))
+            return "/e/<redacted>";
+        if (value.Contains("/s/", StringComparison.OrdinalIgnoreCase))
+            return "/s/<redacted>";
+        return null;
     }
 
     private static async Task<HttpResponseData> Html(HttpRequestData req, string html)
