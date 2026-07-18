@@ -12,5 +12,6 @@ public sealed record ResolvedPodcastResponse(
     [property: JsonPropertyName("feedDescription")] string? FeedDescription,
     [property: JsonPropertyName("episodeCount")] int EpisodeCount,
     [property: JsonPropertyName("itunesID")] long? ItunesId,
+    [property: JsonPropertyName("isLocked")] bool IsLocked,
     [property: JsonPropertyName("websiteURL")]
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? WebsiteUrl);

@@ -47,8 +47,9 @@ public sealed class FeedService
             || (requested.Scheme != Uri.UriSchemeHttp && requested.Scheme != Uri.UriSchemeHttps))
             throw new UnsafeFeedUrlException("Feed URL must be an absolute http(s) URL.");
 
+        var cacheEligible = FeedUrlPolicy.CanCacheFeed(requested, isLocked: false);
         var cacheKey = $"resolved-feed:{requested.AbsoluteUri}";
-        if (_cache.TryGetValue(cacheKey, out ResolvedFeed? cached) && cached is not null)
+        if (cacheEligible && _cache.TryGetValue(cacheKey, out ResolvedFeed? cached) && cached is not null)
             return cached;
 
         var current = requested;
@@ -89,7 +90,8 @@ public sealed class FeedService
                 throw new FeedResolutionException("The podcast feed does not contain a title.");
 
             var resolved = new ResolvedFeed(requested.AbsoluteUri, current.AbsoluteUri, parsed);
-            _cache.Set(cacheKey, resolved, CacheTtl);
+            if (cacheEligible && FeedUrlPolicy.CanCacheFeed(current, parsed.IsLocked))
+                _cache.Set(cacheKey, resolved, CacheTtl);
             return resolved;
         }
 

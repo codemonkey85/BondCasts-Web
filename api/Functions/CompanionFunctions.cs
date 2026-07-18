@@ -1,5 +1,5 @@
 using System.Net;
-using System.Web;
+using System.Text.Json;
 using BondCasts.Api.Models;
 using BondCasts.Api.Services;
 using Microsoft.Azure.Functions.Worker;
@@ -42,19 +42,19 @@ public sealed class CompanionFunctions
 
     [Function("podcast-search")]
     public async Task<HttpResponseData> Search(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "podcasts/search")] HttpRequestData req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "podcasts/search")] HttpRequestData req,
         CancellationToken ct)
     {
-        var query = HttpUtility.ParseQueryString(req.Url.Query);
-        var term = query["term"]?.Trim() ?? string.Empty;
+        var input = await ReadJson<PodcastSearchRequest>(req, ct);
+        var term = input?.Term?.Trim() ?? string.Empty;
         if (term.Length is < 2 or > 100)
             return await Json(req, HttpStatusCode.BadRequest, new { error = "Enter between 2 and 100 characters." }, ct);
-        var limit = int.TryParse(query["limit"], out var parsedLimit) ? parsedLimit : 20;
+        var limit = input?.Limit ?? 20;
 
         try
         {
             var results = await _directory.SearchAsync(term, limit, ct);
-            return await Json(req, HttpStatusCode.OK, new { results }, ct, "public, max-age=300");
+            return await Json(req, HttpStatusCode.OK, new { results }, ct);
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
@@ -68,11 +68,11 @@ public sealed class CompanionFunctions
 
     [Function("podcast-resolve")]
     public async Task<HttpResponseData> Resolve(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "podcasts/resolve")] HttpRequestData req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "podcasts/resolve")] HttpRequestData req,
         CancellationToken ct)
     {
-        var query = HttpUtility.ParseQueryString(req.Url.Query);
-        var feedUrl = query["url"]?.Trim() ?? string.Empty;
+        var input = await ReadJson<PodcastResolveRequest>(req, ct);
+        var feedUrl = input?.Url?.Trim() ?? string.Empty;
         if (feedUrl.Length is < 8 or > 2048)
             return await Json(req, HttpStatusCode.BadRequest, new { error = "Enter a valid podcast feed URL." }, ct);
 
@@ -80,8 +80,8 @@ public sealed class CompanionFunctions
         {
             var resolved = await _feeds.ResolveFeedAsync(feedUrl, ct);
             DirectoryPodcast? directory = null;
-            if (long.TryParse(query["itunesID"], out var itunesId) && itunesId > 0)
-                directory = await _directory.ConfirmAsync(itunesId, resolved.RequestedUrl, ct);
+            if (input?.ItunesId is > 0)
+                directory = await _directory.ConfirmAsync(input.ItunesId.Value, resolved.RequestedUrl, ct);
 
             var feed = resolved.Feed;
             return await Json(req, HttpStatusCode.OK, new ResolvedPodcastResponse(
@@ -93,7 +93,8 @@ public sealed class CompanionFunctions
                 feed.Description,
                 feed.Episodes.Count,
                 directory?.ItunesId,
-                PodcastWebsiteUrl.FromFeed(feed.Link)), ct, "public, max-age=900");
+                feed.IsLocked,
+                PodcastWebsiteUrl.FromFeed(feed.Link)), ct);
         }
         catch (UnsafeFeedUrlException ex)
         {
@@ -126,4 +127,22 @@ public sealed class CompanionFunctions
         await response.WriteAsJsonAsync(body, ct);
         return response;
     }
+
+    private static async Task<T?> ReadJson<T>(HttpRequestData request, CancellationToken ct)
+    {
+        try
+        {
+            return await JsonSerializer.DeserializeAsync<T>(
+                request.Body,
+                new JsonSerializerOptions(JsonSerializerDefaults.Web),
+                ct);
+        }
+        catch (JsonException)
+        {
+            return default;
+        }
+    }
+
+    private sealed record PodcastSearchRequest(string? Term, int? Limit);
+    private sealed record PodcastResolveRequest(string? Url, long? ItunesId);
 }

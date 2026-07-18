@@ -18,6 +18,7 @@ public sealed class CompanionWireContractTests
             null,
             12,
             1234,
+            true,
             "https://publisher.example/show?from=rss");
 
         using var document = JsonDocument.Parse(JsonSerializer.Serialize(value));
@@ -25,6 +26,7 @@ public sealed class CompanionWireContractTests
         Assert.Equal("Example", root.GetProperty("title").GetString());
         Assert.Equal("Publisher", root.GetProperty("author").GetString());
         Assert.Equal("https://example.com/final", root.GetProperty("feedURL").GetString());
+        Assert.True(root.GetProperty("isLocked").GetBoolean());
         Assert.Equal("https://publisher.example/show?from=rss", root.GetProperty("websiteURL").GetString());
         Assert.False(root.TryGetProperty("Title", out _));
         Assert.False(root.TryGetProperty("Author", out _));
@@ -57,6 +59,7 @@ public sealed class CompanionWireContractTests
             null,
             0,
             null,
+            false,
             null);
 
         using var document = JsonDocument.Parse(JsonSerializer.Serialize(value));

@@ -209,6 +209,7 @@ section { scroll-margin-top: 80px; }
 @media (min-width: 760px) { .band .wrap { grid-template-columns: 1.1fr 1fr; gap: 3rem; } }
 .band h2 { font-size: clamp(1.6rem, 3.2vw, 2.1rem); margin: 0 0 0.7rem; }
 .band p { color: var(--muted); margin: 0 0 1rem; font-size: 1.05rem; }
+.band .privacy-link { margin-top: 1.2rem; }
 .band ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.7rem; }
 .band ul li { display: flex; gap: 0.6rem; align-items: flex-start; color: var(--text); }
 .band ul svg { width: 20px; height: 20px; color: var(--accent); flex: none; margin-top: 3px; }
@@ -265,6 +266,7 @@ section { scroll-margin-top: 80px; }
   border-left: 3px solid var(--accent);
   border-radius: 12px; padding: 1rem 1.25rem; margin: 1.5rem 0;
 }
+.feed-line, .preview-feed-line { margin-top: .75rem; color: var(--muted); font-size: .9rem; }
 
 /* --------------------------------------------------------------------------
    Link-preview pages (server-rendered /episode + /show by the Azure Function):
@@ -305,6 +307,7 @@ section { scroll-margin-top: 80px; }
 .site-footer nav { display: flex; flex-wrap: wrap; gap: 1.25rem; }
 .site-footer nav a { color: var(--muted); }
 .site-footer nav a:hover { color: var(--text); }
+.site-footer .footer-legal { padding-top: 0; color: var(--muted); font-size: .85rem; }
 
 /* --------------------------------------------------------------------------
    Motion / accessibility

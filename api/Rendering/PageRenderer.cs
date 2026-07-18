@@ -89,7 +89,7 @@ public sealed partial class PageRenderer
         var body = new StringBuilder();
         body.Append($"<p class=\"lede\">If you have {SiteName} installed, this link opens the {kind} right in the app. Otherwise, get {SiteName} for iPhone, iPad, Mac, and Apple Watch.</p>");
         if (feedUrl is { Length: > 0 })
-            body.Append($"<p style=\"color:var(--muted);font-size:.9rem;\">Podcast feed: <a href=\"{HtmlEncode(feedUrl)}\" rel=\"noopener\">{HtmlEncode(feedUrl)}</a></p>");
+            body.Append($"<p class=\"preview-feed-line\">Podcast feed: <a href=\"{HtmlEncode(feedUrl)}\" rel=\"noopener\">{HtmlEncode(feedUrl)}</a></p>");
 
         return RenderPage(
             documentTitle: $"{Capitalize(kind)} — {SiteName}",
@@ -189,7 +189,7 @@ public sealed partial class PageRenderer
                 <a href="https://bondcodes.com">Michael Bond</a>
               </nav>
             </div>
-            <div class="wrap" style="padding-top:0;color:var(--muted);font-size:0.85rem;">
+            <div class="wrap footer-legal">
               <span>&copy; 2026 BondCasts. Made with care in SwiftUI.</span>
             </div>
           </footer>

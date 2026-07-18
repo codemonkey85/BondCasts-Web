@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Privacy Policy — BondCasts</title>
-  <meta name="description" content="How BondCasts handles your data - no tracking, no ads, and nothing tied to your identity.">
+  <meta name="description" content="How BondCasts handles app, website, and iCloud data without tracking or advertising.">
   <meta name="theme-color" content="#0a0f1e">
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
   <link rel="icon" href="/favicon.ico" sizes="any">
@@ -42,26 +42,35 @@
     <p>
       BondCasts has no analytics SDKs, no advertising identifiers, and no
       third-party tracking. We never receive your listening history - what you
-      play, your positions, or your queue - and nothing the app sends anywhere
-      is tied to your name, email, or Apple Account. The only things our own
-      service ever sees are described below: the public feeds you ask us to
-      check, and the requests to fetch them.
+      play, your positions, or your queue. Our services do receive the limited
+      information described below when you search the website, submit a feed,
+      request a cached feed, or enable new-episode notifications. We do not use
+      that information to profile you or associate it with an Apple Account.
     </p>
 
     <h2>Web companion</h2>
     <p>
       You can search for podcasts and preview verified RSS feeds on the BondCasts
-      website without signing in. Search terms are sent to Apple's public podcast
-      directory, and the selected public feed address is fetched by the BondCasts
-      web service from the podcast host so we can verify its title, artwork, and
-      final address. We do not build a search history or associate these requests
-      with an Apple Account.
+      website without signing in. Search terms go first to the BondCasts web
+      service, which forwards them to Apple's public podcast directory and may
+      keep the returned results in memory for up to five minutes. When you select
+      or paste a feed, its address is sent to our service and fetched from the
+      podcast host so we can verify its title, artwork, privacy marker, and final
+      address. Non-private parsed results may be kept in memory for up to fifteen
+      minutes; locked feeds and addresses containing query tokens are not cached.
+      Responses are marked not to be stored by browsers or intermediary caches.
+      We do not persist a search history or associate these requests with an
+      Apple Account. Like any web request, they necessarily include your IP
+      address and standard request information while the request is being served.
     </p>
     <p>
-      If you choose to sign in with iCloud, Apple authenticates you directly in
-      the browser. Followed-show reads and changes travel directly between your
-      browser and your private CloudKit database. The BondCasts web service does
-      not receive your iCloud credentials or a copy of your private library.
+      If you choose to sign in with iCloud, Apple presents and processes the
+      sign-in. CloudKit JS keeps a session token in your browser so the session
+      can persist, and the page temporarily processes followed-show records in
+      browser memory. Those reads and changes travel directly between your
+      browser and your private CloudKit database. BondCasts servers do not receive
+      your password, CloudKit session token, Apple Account identifier, or a copy
+      of your private library. Signing out ends the browser's CloudKit session.
     </p>
 
     <h2>New-episode notifications</h2>
@@ -73,15 +82,20 @@
       password-protected feeds are never sent to this service. Turning
       notifications off for a show (or entirely) removes the registrations,
       and any registration a device hasn't refreshed in about 30 days expires
-      on its own. You don't have to take our word for any of this: the service
+      on its own. Shows followed from the website start with server notifications
+      off, so an unclassified or private feed cannot enter this registry; you can
+      review that setting later in the app. You don't have to take our word for
+      any of this: the service
       is open source, so you can read exactly what it collects and does -
       <a href="https://github.com/codemonkey85/BondCasts-Web">see the code on GitHub</a>.
     </p>
 
     <h2>Data Apple collects as the platform</h2>
     <p>
-      Because BondCasts is distributed through the App Store and runs on Apple's
-      platforms, Apple collects standard information such as App Store download
+      Because BondCasts is distributed through the App Store, runs on Apple's
+      platforms, and uses Apple's CloudKit JS service on the website, Apple
+      processes the information needed to deliver those services. This includes
+      standard information such as App Store download
       and purchase metrics, and - only if you opt in to sharing with developers -
       aggregate crash and usage analytics. This collection is performed by Apple
       under <a href="https://www.apple.com/legal/privacy/">Apple's privacy
@@ -93,8 +107,9 @@
       Your subscriptions, queue, playback positions, downloads, and settings are
       stored on your device. If you are signed in to iCloud and have the feature
       enabled, this data syncs across your devices using Apple's iCloud
-      (CloudKit) in your own private iCloud account. This data is not accessible
-      to us - it stays within Apple's infrastructure under your account.
+      (CloudKit) in your own private iCloud account. Our servers cannot access
+      that private database. The BondCasts app, and the web companion after you
+      sign in, access it as clients authorized by your Apple Account.
     </p>
 
     <h2>Podcast content</h2>
@@ -140,7 +155,7 @@
         <a href="https://bondcodes.com">Michael Bond</a>
       </nav>
     </div>
-    <div class="wrap" style="padding-top:0;color:var(--muted);font-size:0.85rem;">
+    <div class="wrap footer-legal">
       <span>&copy; 2026 BondCasts. Made with care in SwiftUI.</span>
     </div>
   </footer>

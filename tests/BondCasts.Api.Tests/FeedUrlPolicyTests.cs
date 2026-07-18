@@ -26,4 +26,21 @@ public sealed class FeedUrlPolicyTests
     [InlineData("2606:4700:4700::1111")]
     public void AcceptsPublicAddresses(string value) =>
         Assert.True(FeedUrlPolicy.IsPublicAddress(IPAddress.Parse(value)));
+
+    [Theory]
+    [InlineData("https://example.com/feed?token=secret")]
+    [InlineData("https://example.com/feed#secret")]
+    public void TreatsQueryAndFragmentFeedsAsPotentiallySensitive(string value) =>
+        Assert.True(FeedUrlPolicy.HasPotentiallySensitiveComponents(new Uri(value)));
+
+    [Fact]
+    public void PlainFeedUrlIsCacheEligible() =>
+        Assert.True(FeedUrlPolicy.CanCacheFeed(new Uri("https://example.com/feed.xml"), isLocked: false));
+
+    [Theory]
+    [InlineData("https://example.com/feed.xml", true)]
+    [InlineData("https://example.com/feed.xml?token=secret", false)]
+    [InlineData("https://example.com/feed.xml#secret", false)]
+    public void LockedAndTokenBearingFeedsAreNotCacheEligible(string value, bool isLocked) =>
+        Assert.False(FeedUrlPolicy.CanCacheFeed(new Uri(value), isLocked));
 }

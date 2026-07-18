@@ -45,6 +45,15 @@ public static class FeedUrlPolicy
         return addresses.Length > 0 && addresses.All(IsPublicAddress);
     }
 
+    /// Query strings and fragments frequently carry capability tokens for paid
+    /// or private podcast feeds. Such feeds may still be fetched for the user's
+    /// one request, but must not be retained in shared/in-memory caches.
+    public static bool HasPotentiallySensitiveComponents(Uri uri) =>
+        !string.IsNullOrEmpty(uri.Query) || !string.IsNullOrEmpty(uri.Fragment);
+
+    public static bool CanCacheFeed(Uri uri, bool isLocked) =>
+        !isLocked && !HasPotentiallySensitiveComponents(uri);
+
     public static bool IsPublicAddress(IPAddress address)
     {
         if (address.IsIPv4MappedToIPv6) address = address.MapToIPv4();
