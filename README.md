@@ -93,8 +93,9 @@ Run the native-module contract tests with `npm run test:web`.
 
 Do not connect Application Insights or export HTTP diagnostics without first
 verifying that request bodies, feed URLs, search terms, and CloudKit-related
-metadata are redacted. `api/host.json` disables `Host.Results` request telemetry
-as a defense in depth; preserve that setting if monitoring is added later.
+metadata are redacted. `api/host.json` excludes Application Insights `Request`
+telemetry and separately disables `Host.Results` logs as defense in depth;
+preserve both settings if monitoring is added later.
 
 ## Universal Links
 
