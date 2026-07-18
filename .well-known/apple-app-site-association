@@ -11,6 +11,14 @@
           {
             "/": "/show*",
             "comment": "Show deep links open the app"
+          },
+          {
+            "/": "/e/*",
+            "comment": "Encrypted episode deep links open the app"
+          },
+          {
+            "/": "/s/*",
+            "comment": "Encrypted show deep links open the app"
           }
         ]
       }

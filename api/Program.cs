@@ -28,6 +28,7 @@ var host = new HostBuilder()
         services.AddSingleton<FeedService>();
         services.AddSingleton<PodcastDirectoryService>();
         services.AddSingleton<PageRenderer>();
+        services.AddSingleton<ShareLinkTokenProtector>();
     })
     .Build();
 
