@@ -43,6 +43,19 @@ Without these settings the poller no-ops (safe to deploy unconfigured):
 | `CloudKit__PrivateKeyPemBase64` | `base64 < eckey.pem` of the EC P-256 private key |
 | `Poller__IntervalMinutes` | Optional; per-feed base poll interval (default 20) |
 
+## Production telemetry
+
+The production Function App is connected to Application Insights, but
+`host.json` disables `Host.Results` request telemetry and automatic dependency
+tracking. Custom traces and exceptions remain available for operational failures
+and are retained for 30 days. Log messages omit public feed URLs, public
+registration record names, and podcast titles; a feed hash and exception details
+can remain. Previously collected request and dependency records have four-day
+retention configured, although Azure can preserve data affected by a retention
+reduction for up to 30 additional days as a recovery safeguard. App Service HTTP
+logging, detailed errors, failed-request tracing, and Azure Monitor diagnostic
+exports are disabled. Keep this configuration and `../privacy.html` in sync.
+
 ## Local development
 
 ```bash

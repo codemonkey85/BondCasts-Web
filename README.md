@@ -93,9 +93,10 @@ Run the native-module contract tests with `npm run test:web`.
 
 Do not connect Application Insights or export HTTP diagnostics without first
 verifying that request bodies, feed URLs, search terms, and CloudKit-related
-metadata are redacted. `api/host.json` excludes Application Insights `Request`
-telemetry and separately disables `Host.Results` logs as defense in depth;
-preserve both settings if monitoring is added later.
+metadata are redacted. `api/host.json` disables `Host.Results` so managed
+Functions request telemetry is suppressed at its source if monitoring is added
+later. An Application Insights sampling `excludedTypes` value is not a collection
+filter: excluding `Request` from sampling means every request is sent.
 
 ## Universal Links
 
@@ -127,8 +128,8 @@ The App Store nutrition label is **"Data Not Linked to You"** as of 2026-07-13
 (re-audited for PodcastApp#135): the new-episode push service registers the
 public feed URLs of notification-enabled shows in the public CloudKit database
 under a random per-device ID, which the poller reads with server-to-server
-keys (~30-day retention). Declared: Identifiers > Device ID and Usage Data >
-Other Usage Data, purpose App Functionality, not linked to identity, no
+keys (~30-day retention). Declared: Identifiers > Device ID and Other Data >
+Other Data Types, purpose App Functionality, not linked to identity, no
 tracking. Everything else is unchanged: no third-party analytics/ad/crash
 SDKs, sync via the user's private CloudKit database (which the developer
 can't read), feeds fetched directly from podcast hosts the user chose.
@@ -146,3 +147,24 @@ nutrition label in App Store Connect, `NSPrivacyCollectedDataTypes` in
       private iCloud (2026-07-13, the #135 push registrations - label, manifest,
       and privacy.html all updated)
 - [ ] Anything that phones home (remote config, feature flags, server logging)
+
+Production logging was audited on 2026-07-17 for issue #34:
+
+- `bondcasts-web` has no Application Insights setting and no Azure Monitor
+  diagnostic export. The managed API therefore has no developer-accessible
+  individual request log; Static Web Apps still exposes aggregate service
+  metrics such as hit and error counts.
+- `bondcasts-poller` is connected to Application Insights. Its request, trace,
+  exception, and dependency tables originally retained data for 90 days. The
+  audit found that `excludedTypes: "Request"` prevented sampling rather than
+  collection. Request and automatic dependency telemetry are now disabled at
+  the Functions host; their existing tables have four-day retention configured.
+  Remaining Application Insights tables retain data for 30 days. App Service
+  HTTP logs, detailed errors, failed-request tracing, and resource diagnostic
+  exports remain disabled. Azure can preserve data affected by a retention
+  reduction for up to 30 additional days as a recovery safeguard.
+
+Keep these production settings and `privacy.html` in sync. The optional App
+Store Connect **Privacy Choices URL** intentionally remains unset: the policy's
+`#controls` section contains the real controls, and there is no separate choices
+page to link.

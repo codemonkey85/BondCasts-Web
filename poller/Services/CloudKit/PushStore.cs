@@ -59,7 +59,7 @@ public sealed class PushStore(CloudKitClient cloudKit, ILogger<PushStore> logger
                 var lastSeenMs = fields?["lastSeenAt"]?["value"]?.GetValue<long>();
                 if (recordName is null || feedUrl is null || feedHash is null || lastSeenMs is null)
                 {
-                    logger.LogWarning("Skipping malformed PolledFeed record {Name}.", recordName ?? "?");
+                    logger.LogWarning("Skipping malformed PolledFeed record.");
                     continue;
                 }
                 rows.Add(new PolledFeedRow(

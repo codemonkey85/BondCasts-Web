@@ -77,6 +77,7 @@ HTTP triggers, so its timer can't be deployed from here. See `../poller/README.m
   documentation-only network destinations on the initial URL and every redirect.
 - The CloudKit configuration endpoint may expose only an origin-restricted web
   API token. Never place a server-to-server CloudKit key in this Functions app.
-- `host.json` excludes Application Insights `Request` telemetry and separately
-  disables `Host.Results` logs. Do not enable or export HTTP telemetry without
-  redacting search terms, feed URLs, and request bodies.
+- `host.json` disables `Host.Results`, suppressing managed Functions request
+  telemetry at its source. Application Insights sampling exclusions do not turn
+  collection off. Do not enable or export HTTP telemetry without redacting
+  search terms, feed URLs, and request bodies.

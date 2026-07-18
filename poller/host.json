@@ -6,10 +6,13 @@
     }
   },
   "logging": {
+    "logLevel": {
+      "Host.Results": "None"
+    },
     "applicationInsights": {
+      "enableDependencyTracking": false,
       "samplingSettings": {
-        "isEnabled": true,
-        "excludedTypes": "Request"
+        "isEnabled": true
       }
     }
   }

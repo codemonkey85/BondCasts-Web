@@ -62,6 +62,12 @@
       We do not persist a search history or associate these requests with an
       Apple Account. Like any web request, they necessarily include your IP
       address and standard request information while the request is being served.
+      The production web companion does not have Application Insights or HTTP
+      diagnostic exports enabled, so BondCasts does not retain those individual
+      requests, IP addresses, search terms, or submitted feed addresses in
+      developer-accessible logs. Azure exposes aggregate service measurements,
+      such as request and error counts, without giving us an individual request
+      history through the logging configuration we use.
     </p>
     <p>
       If you choose to sign in with iCloud, Apple presents and processes the
@@ -110,6 +116,82 @@
       (CloudKit) in your own private iCloud account. Our servers cannot access
       that private database. The BondCasts app, and the web companion after you
       sign in, access it as clients authorized by your Apple Account.
+    </p>
+
+    <h2 id="controls">Your controls, retention, and deletion choices</h2>
+
+    <h3>Web session and followed shows</h3>
+    <p>
+      Use the Apple-provided <strong>Sign Out</strong> button on the web companion
+      to end its CloudKit browser session. The session data remains in that
+      browser until you sign out, it expires, or you clear the site's browser
+      data; BondCasts servers never receive it. Choosing <strong>Unfollow</strong>
+      in the app or on the web companion removes the matching followed-show
+      record from your private CloudKit database. Unfollowing does not erase
+      separate playback history, queue, settings, or other BondCasts records.
+    </p>
+
+    <h3>New-episode notifications</h3>
+    <p>
+      You can turn new-episode notifications off for an individual show, or turn
+      them off entirely in BondCasts Settings. Each installed device then removes
+      its public feed registrations when it next reconciles with CloudKit. If a
+      device cannot remove one immediately, the registration expires after it has
+      not been refreshed for about 30 days. Removing the app without first
+      turning notifications off has the same approximately 30-day backstop.
+    </p>
+
+    <h3>Delete all BondCasts data from iCloud</h3>
+    <p>
+      To remove the private BondCasts data that we cannot access, first turn off
+      iCloud for BondCasts on every device so a remaining local copy is not synced
+      back. On iPhone or iPad, open <strong>Settings &gt; [your name] &gt; iCloud &gt;
+      See All &gt; BondCasts</strong>. Then open <strong>Settings &gt; [your name] &gt;
+      iCloud &gt; Storage</strong> (or <strong>Manage Account Storage</strong>), choose
+      BondCasts, and use Apple's delete-data option. The wording can vary by OS
+      version; Apple also explains how to
+      <a href="https://support.apple.com/guide/icloud/mm62d92d6b3e/icloud">delete
+      third-party app data from iCloud</a>. Delete BondCasts from your devices as
+      well if you also want to remove local settings, downloads, and cached data.
+      Because your private CloudKit database is accessible only through your
+      Apple Account, we cannot perform that deletion for you.
+    </p>
+
+    <h3>Retention summary</h3>
+    <ul>
+      <li>
+        <strong>Web companion:</strong> directory results may stay in server
+        memory for up to five minutes, and eligible parsed public feeds for up to
+        fifteen minutes. They can disappear sooner when the service restarts or
+        needs the memory. Private feeds and feed addresses containing query
+        tokens are not put in those caches.
+      </li>
+      <li>
+        <strong>Notification service:</strong> public feed registrations and
+        new-episode announcement records expire after about 30 days. Parsed-feed
+        cache and polling state are kept only while at least one current
+        registration needs that public feed, then deleted after the poller sees
+        that no current registration remains.
+      </li>
+      <li>
+        <strong>Operational logs:</strong> the standalone feed service does not
+        collect individual request telemetry or automatic outbound-request
+        telemetry. Operational traces and exceptions are retained for up to 30
+        days and can include a public feed hash and technical error details; log
+        messages omit public feed addresses, public registration record names,
+        and podcast titles. Previously collected request and outbound-request
+        records have four-day retention configured. When retention is shortened,
+        Azure may preserve older records for up to 30 additional days as a
+        recovery safeguard. App Service HTTP logs, detailed error pages,
+        failed-request tracing, and diagnostic exports are not enabled.
+      </li>
+    </ul>
+
+    <p>
+      Email <a href="mailto:privacy@bondcasts.com">privacy@bondcasts.com</a> with
+      privacy or deletion questions. We can help you find the controls above and
+      address developer-accessible information, but private iCloud data must be
+      deleted using your Apple Account controls.
     </p>
 
     <h2>Podcast content</h2>
