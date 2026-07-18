@@ -4,11 +4,27 @@ import test from "node:test";
 
 const hostConfigURL = new URL("../../api/host.json", import.meta.url);
 const hostConfig = JSON.parse(await readFile(hostConfigURL, "utf8"));
+const pollerHostConfigURL = new URL("../../poller/host.json", import.meta.url);
+const pollerHostConfig = JSON.parse(await readFile(pollerHostConfigURL, "utf8"));
 
-test("Functions telemetry configuration excludes request URLs", () => {
+test("managed Functions suppress request telemetry at the source", () => {
+  assert.equal(hostConfig.logging.logLevel["Host.Results"], "None");
   assert.equal(
     hostConfig.logging.applicationInsights.samplingSettings.excludedTypes,
-    "Request"
+    undefined,
+    "sampling exclusions do not disable collection"
   );
-  assert.equal(hostConfig.logging.logLevel["Host.Results"], "None");
+});
+
+test("standalone feed service omits request and dependency telemetry", () => {
+  assert.equal(pollerHostConfig.logging.logLevel["Host.Results"], "None");
+  assert.equal(
+    pollerHostConfig.logging.applicationInsights.enableDependencyTracking,
+    false
+  );
+  assert.equal(
+    pollerHostConfig.logging.applicationInsights.samplingSettings.excludedTypes,
+    undefined,
+    "sampling exclusions do not disable collection"
+  );
 });

@@ -241,8 +241,8 @@ public sealed class FeedPoller(
             var backoff = options.PollInterval * Math.Pow(2, Math.Min(state.FailureCount, 6));
             state.NextPollAt = DateTimeOffset.UtcNow + (backoff > MaxBackoff ? MaxBackoff : backoff);
             state.LastPolledAt = DateTimeOffset.UtcNow;
-            _logger.LogWarning(ex, "Poll failed for feed {Hash} ({Url}); failure #{Count}.",
-                state.FeedHash, state.FeedUrl, state.FailureCount);
+            _logger.LogWarning(ex, "Poll failed for feed {Hash}; failure #{Count}.",
+                state.FeedHash, state.FailureCount);
         }
     }
 
@@ -308,8 +308,8 @@ public sealed class FeedPoller(
 
         await store.AnnounceNewEpisodeAsync(
             state.FeedHash, showTitle, alertBody, newest.Guid, announceable.Count, ct);
-        _logger.LogInformation("Announced {Count} new episode(s) for {Show} ({Hash}).",
-            announceable.Count, showTitle, state.FeedHash);
+        _logger.LogInformation("Announced {Count} new episode(s) for feed {Hash}.",
+            announceable.Count, state.FeedHash);
     }
 
     /// Identity used for new-episode detection. When a feed provides no
