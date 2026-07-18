@@ -75,7 +75,7 @@ public sealed class LinkPreviewFunctions
         string token,
         CancellationToken ct)
     {
-        LogSharedLinkRewriteProbe(req, "episode", token);
+        token = EffectiveSharedLinkToken(req, "e", token);
         var payload = _tokens.ResolveEpisode(token);
         return payload is null || payload.Guid is null
             ? await Html(req, _renderer.RenderOpaqueFallback("episode", token, req.Url.ToString()))
@@ -88,7 +88,7 @@ public sealed class LinkPreviewFunctions
         string token,
         CancellationToken ct)
     {
-        LogSharedLinkRewriteProbe(req, "show", token);
+        token = EffectiveSharedLinkToken(req, "s", token);
         var payload = _tokens.ResolveShow(token);
         if (payload is null)
             return await Html(req, _renderer.RenderOpaqueFallback("podcast", token, req.Url.ToString()));
@@ -146,56 +146,42 @@ public sealed class LinkPreviewFunctions
         return await Html(req, _renderer.RenderEpisode(feed, episode, canonical));
     }
 
-    private void LogSharedLinkRewriteProbe(HttpRequestData req, string kind, string token)
+    private static string EffectiveSharedLinkToken(HttpRequestData req, string prefix, string routeToken)
     {
-        if (token != "*")
-            return;
+        if (routeToken != "*")
+            return routeToken;
 
-        var headerNames = req.Headers
-            .Select(header => header.Key)
-            .Order(StringComparer.OrdinalIgnoreCase)
-            .ToArray();
-        var candidateHeaders = new[]
-        {
-            "x-ms-original-url",
-            "x-original-url",
-            "x-forwarded-url",
-            "x-forwarded-uri",
-            "x-forwarded-path",
-            "x-arr-original-url",
-            "referer"
-        };
-        var candidateShapes = candidateHeaders
-            .Select(name => HeaderShape(req, name))
-            .Where(shape => shape is not null)
-            .ToArray();
-
-        _logger.LogInformation(
-            "Shared link SWA rewrite probe: kind={Kind}, requestPath={Path}, headerNames={HeaderNames}, candidateHeaderShapes={CandidateHeaderShapes}",
-            kind,
-            req.Url.AbsolutePath,
-            string.Join(",", headerNames),
-            string.Join(",", candidateShapes));
+        return SharedLinkTokenFromHeader(req, "x-ms-original-url", prefix)
+            ?? SharedLinkTokenFromHeader(req, "x-original-url", prefix)
+            ?? routeToken;
     }
 
-    private static string? HeaderShape(HttpRequestData req, string name)
+    private static string? SharedLinkTokenFromHeader(HttpRequestData req, string headerName, string prefix)
     {
-        if (!req.Headers.TryGetValues(name, out var values))
+        if (!req.Headers.TryGetValues(headerName, out var values))
             return null;
 
-        var valueShape = values
-            .Select(RedactedSharedLinkShape)
-            .FirstOrDefault(shape => shape is not null);
-        return valueShape is null ? $"{name}=present" : $"{name}={valueShape}";
+        foreach (var value in values)
+        {
+            if (SharedLinkTokenFromOriginalPath(value, prefix) is { } token)
+                return token;
+        }
+
+        return null;
     }
 
-    private static string? RedactedSharedLinkShape(string value)
+    private static string? SharedLinkTokenFromOriginalPath(string value, string prefix)
     {
-        if (value.Contains("/e/", StringComparison.OrdinalIgnoreCase))
-            return "/e/<redacted>";
-        if (value.Contains("/s/", StringComparison.OrdinalIgnoreCase))
-            return "/s/<redacted>";
-        return null;
+        var path = Uri.TryCreate(value, UriKind.Absolute, out var absolute)
+                   && (absolute.Scheme == Uri.UriSchemeHttp || absolute.Scheme == Uri.UriSchemeHttps)
+            ? absolute.AbsolutePath
+            : value.Split('?', '#')[0];
+        var segments = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length != 2 || !string.Equals(segments[0], prefix, StringComparison.Ordinal))
+            return null;
+
+        var token = Uri.UnescapeDataString(segments[1]);
+        return string.IsNullOrWhiteSpace(token) ? null : token;
     }
 
     private static async Task<HttpResponseData> Html(HttpRequestData req, string html)
