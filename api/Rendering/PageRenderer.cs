@@ -263,9 +263,12 @@ public sealed partial class PageRenderer
 
     private static string SafeOpenUrl(string? url)
     {
-        var safe = SafeUrl(url);
-        return safe.StartsWith("https://bondcasts.com/", StringComparison.Ordinal)
-            ? safe
+        if (string.IsNullOrWhiteSpace(url)) return string.Empty;
+        url = url.Trim();
+        return Uri.TryCreate(url, UriKind.Absolute, out var u)
+               && u.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)
+               && u.Host.Equals("bondcasts.com", StringComparison.OrdinalIgnoreCase)
+            ? url
             : string.Empty;
     }
 

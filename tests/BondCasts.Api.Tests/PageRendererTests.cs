@@ -43,6 +43,17 @@ public sealed class PageRendererTests
         Assert.Contains("""<a class="brand" href="/">Open podcast in BondCasts</a>""", html);
     }
 
+    [Fact]
+    public void PageCallout_AllowsBondCastsUrlsCaseInsensitively()
+    {
+        var html = new PageRenderer().RenderShow(
+            SampleFeed(),
+            "https://bondcasts.com/s/v1.2026-07.token",
+            openUrl: "HTTPS://BondCasts.com/s/v1.2026-07.token");
+
+        Assert.Contains("""<a class="brand" href="HTTPS://BondCasts.com/s/v1.2026-07.token">Open podcast in BondCasts</a>""", html);
+    }
+
     private static ParsedFeed SampleFeed() => new()
     {
         FeedUrl = "https://feeds.example.com/show.xml",
