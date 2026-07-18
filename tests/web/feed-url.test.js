@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
-import { isHTTPFeedURL, isSameFeed, normalizeFeedURL } from "../../scripts/companion/feed-url.js";
+import {
+  isHTTPFeedURL,
+  isPotentiallyPrivateFeedURL,
+  isSameFeed,
+  normalizeFeedURL
+} from "../../scripts/companion/feed-url.js";
 
 const fixtureURL = new URL("./fixtures/feed-url-contract.json", import.meta.url);
 const fixtures = JSON.parse(await readFile(fixtureURL, "utf8"));
@@ -21,4 +26,11 @@ test("fetchable URLs reject credentials and non-http schemes", () => {
   assert.equal(isHTTPFeedURL("https://example.com/feed"), true);
   assert.equal(isHTTPFeedURL("https://user:pass@example.com/feed"), false);
   assert.equal(isHTTPFeedURL("file:///tmp/feed.xml"), false);
+});
+
+test("query and fragment feed URLs receive private handling", () => {
+  assert.equal(isPotentiallyPrivateFeedURL("https://example.com/feed.xml"), false);
+  assert.equal(isPotentiallyPrivateFeedURL("https://example.com/feed?token=secret"), true);
+  assert.equal(isPotentiallyPrivateFeedURL("https://example.com/feed#secret"), true);
+  assert.equal(isPotentiallyPrivateFeedURL("https://user:pass@example.com/feed"), true);
 });

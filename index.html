@@ -23,6 +23,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16.png">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
   <link rel="stylesheet" href="/styles.css">
+  <script src="/scripts/reveal.js" defer></script>
 </head>
 <body>
   <header class="site-header">
@@ -145,18 +146,18 @@
           <ul>
             <li>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-              No tracking, no ads, no third-party SDKs
+              No tracking, no ads, no analytics or advertising SDKs
             </li>
             <li>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-              Sync happens in your own private iCloud — we can't read it
+              Sync happens in your private iCloud — our servers don't receive it
             </li>
             <li>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
               Transcription runs on-device; audio is never uploaded to us
             </li>
           </ul>
-          <p style="margin-top:1.2rem"><a href="/privacy.html">Read the full privacy policy →</a></p>
+          <p class="privacy-link"><a href="/privacy.html">Read the full privacy policy →</a></p>
         </div>
         <div class="band-visual" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 3.5v5.5c0 5-3.4 8.9-8 10.5-4.6-1.6-8-5.5-8-10.5V5.5L12 2z"/><path d="M9 12l2 2 4-4.5"/></svg>
@@ -216,26 +217,9 @@
         <a href="https://bondcodes.com">Michael Bond</a>
       </nav>
     </div>
-    <div class="wrap" style="padding-top:0;color:var(--muted);font-size:0.85rem;">
+    <div class="wrap footer-legal">
       <span>&copy; 2026 BondCasts. Made with care in SwiftUI.</span>
     </div>
   </footer>
-
-  <script>
-    // Reveal-on-scroll (progressive enhancement; CSS handles reduced-motion)
-    (function () {
-      var els = document.querySelectorAll('.reveal');
-      if (!('IntersectionObserver' in window)) {
-        els.forEach(function (el) { el.classList.add('in'); });
-        return;
-      }
-      var io = new IntersectionObserver(function (entries) {
-        entries.forEach(function (e) {
-          if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
-        });
-      }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
-      els.forEach(function (el) { io.observe(el); });
-    })();
-  </script>
 </body>
 </html>

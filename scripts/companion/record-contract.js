@@ -54,7 +54,10 @@ export function encodeFollowedShowRecord(show, options = {}) {
     [fields.feedURL]: ckField(show.feedURL, "STRING"),
     [fields.title]: ckField(title, "STRING"),
     [fields.followedAt]: ckField(followedAt, "TIMESTAMP"),
-    [fields.notifyNewEpisodes]: ckField(1, "INT64"),
+    // A web follow has not yet been classified by the native app's local feed
+    // cache. Fail private: never let it enter the public notification registry
+    // until the user reviews and enables alerts in BondCasts itself.
+    [fields.notifyNewEpisodes]: ckField(0, "INT64"),
     [fields.autoDownloadRaw]: ckField(0, "INT64"),
     [fields.autoQueueRaw]: ckField(0, "INT64"),
     [fields.isPinned]: ckField(0, "INT64"),

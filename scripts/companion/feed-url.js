@@ -60,6 +60,15 @@ export function isHTTPFeedURL(value) {
   }
 }
 
+export function isPotentiallyPrivateFeedURL(value) {
+  try {
+    const url = new URL(String(value ?? ""));
+    return Boolean(url.username || url.password || url.search || url.hash);
+  } catch {
+    return false;
+  }
+}
+
 function compareQueryItems([aName, aValue], [bName, bValue]) {
   if (aName !== bName) return aName < bName ? -1 : 1;
   if (aValue === bValue) return 0;

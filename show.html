@@ -19,6 +19,7 @@
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
   <link rel="stylesheet" href="/styles.css">
+  <script src="/scripts/feed-link.js" defer></script>
 </head>
 <body>
   <header class="site-header">
@@ -44,7 +45,7 @@
 
     <div class="callout">
       <a class="brand" href="/">Get BondCasts</a>
-      <p id="feed-line" style="margin-top:.75rem;color:var(--muted);font-size:.9rem;"></p>
+      <p id="feed-line" class="feed-line"></p>
     </div>
   </main>
 
@@ -61,25 +62,9 @@
         <a href="https://bondcodes.com">Michael Bond</a>
       </nav>
     </div>
-    <div class="wrap" style="padding-top:0;color:var(--muted);font-size:0.85rem;">
+    <div class="wrap footer-legal">
       <span>&copy; 2026 BondCasts. Made with care in SwiftUI.</span>
     </div>
   </footer>
-
-  <script>
-    (function () {
-      const params = new URLSearchParams(location.search);
-      const feed = params.get("feed");
-      if (feed) {
-        const el = document.getElementById("feed-line");
-        const a = document.createElement("a");
-        a.href = feed;
-        a.textContent = feed;
-        a.rel = "noopener";
-        el.append("Podcast feed: ");
-        el.append(a);
-      }
-    })();
-  </script>
 </body>
 </html>

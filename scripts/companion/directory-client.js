@@ -1,26 +1,30 @@
 export async function searchPodcasts(term, options = {}) {
   const url = new URL("/api/podcasts/search", window.location.origin);
-  url.searchParams.set("term", term);
-  url.searchParams.set("limit", "20");
-  const payload = await fetchJSON(url, options.signal);
+  const payload = await postJSON(url, { term, limit: 20 }, options.signal);
   return Array.isArray(payload.results) ? payload.results : [];
 }
 
 export async function resolvePodcast(feedURL, options = {}) {
   const url = new URL("/api/podcasts/resolve", window.location.origin);
-  url.searchParams.set("url", feedURL);
+  const body = { url: feedURL };
   if (Number.isSafeInteger(options.itunesID)) {
-    url.searchParams.set("itunesID", String(options.itunesID));
+    body.itunesID = options.itunesID;
   }
-  return fetchJSON(url, options.signal);
+  return postJSON(url, body, options.signal);
 }
 
-async function fetchJSON(url, signal) {
+async function postJSON(url, body, signal) {
   let response;
   try {
     response = await fetch(url, {
+      method: "POST",
       signal,
-      headers: { Accept: "application/json" }
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json"
+      },
+      cache: "no-store",
+      body: JSON.stringify(body)
     });
   } catch (error) {
     if (error?.name === "AbortError") throw error;

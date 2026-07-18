@@ -17,7 +17,7 @@ test("encodes the Core Data FollowedShow contract and safe defaults", () => {
 
   assert.equal(record.recordType, FOLLOWED_SHOW_RECORD_TYPE);
   assert.equal(record.fields.CD_entityName.value, "FollowedShow");
-  assert.deepEqual(record.fields.CD_notifyNewEpisodes, { value: 1, type: "INT64" });
+  assert.deepEqual(record.fields.CD_notifyNewEpisodes, { value: 0, type: "INT64" });
   assert.deepEqual(record.fields.CD_autoDownloadRaw, { value: 0, type: "INT64" });
   assert.deepEqual(record.fields.CD_autoQueueRaw, { value: 0, type: "INT64" });
   assert.deepEqual(record.fields.CD_isPinned, { value: 0, type: "INT64" });

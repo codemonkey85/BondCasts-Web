@@ -56,10 +56,13 @@ subdomain to work too.
 
 ## Web companion configuration
 
-`/discover` keeps search and verified feed previews public. Followed state and
-mutations run directly between CloudKit JS and the signed-in user's private
-iCloud database; the API never receives CloudKit user credentials or private
-records.
+`/discover` keeps search and verified feed previews public. Search and resolve
+requests use no-store POST bodies so terms and capability feed URLs do not appear
+in request URLs or shared caches. Followed state and mutations run directly
+between CloudKit JS and the signed-in user's private iCloud database; the API
+never receives CloudKit user credentials or private records. Web-created follows
+always start with new-episode notifications off so an unclassified feed cannot
+enter the public notification registry.
 
 Configure these Azure Functions application settings:
 
@@ -68,6 +71,10 @@ Configure these Azure Functions application settings:
 | `BONDCASTS_CLOUDKIT_WEB_API_TOKEN` | Origin-restricted CloudKit web API token; its presence enables sign-in |
 | `BONDCASTS_CLOUDKIT_ENVIRONMENT` | `development` or `production` (defaults to `production`) |
 | `BONDCASTS_CLOUDKIT_WRITES_ENABLED` | Must be exactly `true` to expose follow/unfollow mutations |
+
+`BONDCASTS_CLOUDKIT_WRITES_ENABLED` is a rollout/UI switch, not an authorization
+boundary. CloudKit API-token origin restrictions, authenticated private-database
+access, and production schema roles remain the security controls.
 
 Restrict the Production token to the exact production origin in CloudKit
 Console and set its Sign In Callback to **Post Message**, which is the mode used
@@ -83,6 +90,12 @@ available; iPhone, iPad, and other supported desktop browsers can still connect
 to iCloud.
 
 Run the native-module contract tests with `npm run test:web`.
+
+Do not connect Application Insights or export HTTP diagnostics without first
+verifying that request bodies, feed URLs, search terms, and CloudKit-related
+metadata are redacted. `api/host.json` excludes Application Insights `Request`
+telemetry and separately disables `Host.Results` logs as defense in depth;
+preserve both settings if monitoring is added later.
 
 ## Universal Links
 

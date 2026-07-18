@@ -3,7 +3,7 @@ import { isMacSafari } from "./browser-support.js";
 import { createLibrarySetupPanel, createShowWebsiteLink } from "./companion-ui.js";
 import { resolvePodcast, searchPodcasts } from "./directory-client.js";
 import { CompanionError } from "./errors.js";
-import { isHTTPFeedURL, normalizeFeedURL } from "./feed-url.js";
+import { isHTTPFeedURL, isPotentiallyPrivateFeedURL, normalizeFeedURL } from "./feed-url.js";
 import { discoverFollowedShows, isLibrarySetupRequired } from "./library-connection.js";
 
 const elements = {
@@ -48,6 +48,9 @@ void initialize();
 async function initialize() {
   const initialQuery = new URLSearchParams(window.location.search).get("q")?.trim();
   if (initialQuery) {
+    // Remove legacy/shareable query text before any reload or navigation can
+    // turn a pasted capability feed URL into an HTTP request URL.
+    history.replaceState(null, "", window.location.pathname);
     elements.query.value = initialQuery;
     void runSearch(initialQuery);
   }
@@ -62,9 +65,6 @@ async function handleSearch(event) {
     elements.query.focus();
     return;
   }
-  const url = new URL(window.location.href);
-  url.searchParams.set("q", query);
-  history.replaceState(null, "", url);
   await runSearch(query);
 }
 
@@ -188,6 +188,14 @@ function renderInspector() {
   if (show.itunesID) facts.append(textElement("span", `Apple ID ${show.itunesID}`));
   body.append(facts);
 
+  if (show.isLocked || isPotentiallyPrivateFeedURL(show.feedURL)) {
+    body.append(textElement(
+      "p",
+      "Private-feed protection is on. This address will stay in your private iCloud library, with server notifications off.",
+      "private-feed-note"
+    ));
+  }
+
   if (state.cloudState === "setup-required") {
     body.append(createLibrarySetupPanel(document, {
       compact: true,
@@ -224,7 +232,7 @@ function renderInspector() {
   } else {
     action.textContent = "Follow in BondCasts";
     action.addEventListener("click", () => mutateFollow(true));
-    note.textContent = "The verified feed will appear on your BondCasts devices through iCloud.";
+    note.textContent = "The feed will sync through iCloud with new-episode alerts off until you review them in the app.";
   }
 
   body.append(action, note);
