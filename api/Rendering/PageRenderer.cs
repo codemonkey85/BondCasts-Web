@@ -106,6 +106,30 @@ public sealed partial class PageRenderer
             originalUrl: originalUrl);
     }
 
+    /// Fallback for opaque path-based links (`/e/<id>` and `/s/<id>`). The id is
+    /// intentionally not rendered into the page; the app can resolve it locally,
+    /// and a later short-link store can hydrate rich metadata server-side.
+    public string RenderOpaqueFallback(string kind, string? id, string originalUrl)
+    {
+        _ = id; // Deliberately not rendered; opaque ids should not leak into HTML.
+        var body = new StringBuilder();
+        body.Append($"<p class=\"lede\">If you have {SiteName} installed, this shared {HtmlEncode(kind)} opens right in the app. Otherwise, get {SiteName} for iPhone, iPad, Mac, and Apple Watch.</p>");
+
+        return RenderPage(
+            documentTitle: $"{Capitalize(kind)} — {SiteName}",
+            ogTitle: $"Open in {SiteName}",
+            ogDescription: $"Open this shared {kind} in {SiteName}.",
+            ogImage: DefaultImage,
+            ogType: "website",
+            heroImage: string.Empty,
+            headingHtml: $"Open this shared {HtmlEncode(kind)} in {SiteName}",
+            subtitleHtml: null,
+            bodyHtml: body.ToString(),
+            linksHtml: string.Empty,
+            openLabel: "Get BondCasts",
+            originalUrl: originalUrl);
+    }
+
     private static string RenderPage(
         string documentTitle, string ogTitle, string ogDescription, string ogImage,
         string ogType, string heroImage, string headingHtml, string? subtitleHtml,

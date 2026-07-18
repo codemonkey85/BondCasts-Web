@@ -5,6 +5,8 @@
     { "route": "/discover", "rewrite": "/discover/index.html" },
     { "route": "/episode", "rewrite": "/api/episode" },
     { "route": "/show", "rewrite": "/api/show" },
+    { "route": "/e/*", "rewrite": "/api/e/*" },
+    { "route": "/s/*", "rewrite": "/api/s/*" },
     { "route": "/.well-known/apple-app-site-association", "rewrite": "/.well-known/apple-app-site-association.json" }
   ],
   "globalHeaders": {

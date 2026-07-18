@@ -1,8 +1,9 @@
 # BondCasts link-preview API
 
 Azure Functions (.NET 9 isolated) that server-render rich landing pages for the
-universal-link paths `/episode` and `/show`, so shared links unfurl with real
-show/episode metadata (title, artwork, notes) instead of a generic card.
+universal-link paths `/episode`, `/show`, `/e/<token>`, and `/s/<token>`, so
+shared links unfurl with real show/episode metadata (title, artwork, notes)
+instead of a generic card.
 
 ## Why this exists
 
@@ -11,6 +12,11 @@ URL) and `guid` (the RSS `<guid>`). The static site can't turn those into a rich
 page: browser JS can't fetch arbitrary feeds (CORS), and link crawlers don't run
 JS anyway (so Open Graph tags must be in the served HTML). These Functions fetch
 and parse the feed server-side and bake the OG tags into the response.
+
+New app-generated links use encrypted path tokens so Messages and screenshots do
+not expose raw feed URLs. The app encrypts `{ feed, guid }` or `{ feed }` with a
+public key; the Functions app decrypts with the matching private key and then
+uses the same feed-rendering path as the legacy query links.
 
 Feed parsing mirrors the app's `RSSFeedParser.swift` so the web resolves a link
 to the same show/episode the app does.
@@ -21,14 +27,48 @@ to the same show/episode the app does.
 | --- | --- |
 | `GET /episode?feed=<rss>&guid=<guid>` | Rich episode page |
 | `GET /show?feed=<rss>` | Rich show page |
+| `GET /e/<encrypted-token>` | Rich encrypted episode page |
+| `GET /s/<encrypted-token>` | Rich encrypted show page |
+| `GET /api/share/episode/<encrypted-token>` | JSON resolver for the app |
+| `GET /api/share/show/<encrypted-token>` | JSON resolver for the app |
 | `POST /api/podcasts/search` with `{ "term": ..., "limit": ... }` | Public Apple podcast-directory search |
 | `POST /api/podcasts/resolve` with `{ "url": ..., "itunesID": ... }` | Resolve redirects and return verified RSS metadata |
 | `GET /api/companion/config` | Public, environment-backed CloudKit JS configuration |
 
-Static Web Apps rewrites `/episode` → `/api/episode` and `/show` → `/api/show`
-(see `../staticwebapp.config.json`). If the feed is unreachable or the `guid` has
-aged out of the feed window, the endpoint serves a generic fallback card so the
-link never looks broken.
+Static Web Apps rewrites `/episode` → `/api/episode`, `/show` → `/api/show`,
+`/e/*` → `/api/e/*`, and `/s/*` → `/api/s/*` (see
+`../staticwebapp.config.json`). If the feed is unreachable, the token cannot be
+decrypted, or the `guid` has aged out of the feed window, the endpoint serves a
+generic fallback card so the link never looks broken.
+
+## Encrypted share-link keys
+
+Encrypted tokens have this shape:
+
+```text
+v1.<kid>.<rsa-encrypted-aes-key>.<nonce>.<ciphertext-and-tag>
+```
+
+The app ships the current public key and key id. The Functions app needs a
+private-key ring in environment variables:
+
+| Setting | Value |
+| --- | --- |
+| `ShareLinks__KeyIds` | Comma-separated key ids, for example `2026-07` |
+| `ShareLinks__PrivateKeys__2026_07` | Base64-encoded PEM private key for key id `2026-07` |
+
+Rotation is manual and low-frequency:
+
+1. Generate a new RSA keypair.
+2. Add the new private key to the web environment under a new key id.
+3. Deploy web with both old and new private keys.
+4. Update the app public-key constant and key id.
+5. Ship the app.
+6. Keep old private keys as long as old shared links should keep resolving.
+
+Never put the private key in the app. The web resolver also rejects decrypted
+feed URLs with query strings, fragments, or userinfo so encrypted links cannot be
+used to render signed/private feeds.
 
 ## Local development
 
