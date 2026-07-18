@@ -70,10 +70,17 @@ Configure these Azure Functions application settings:
 | `BONDCASTS_CLOUDKIT_WRITES_ENABLED` | Must be exactly `true` to expose follow/unfollow mutations |
 
 Restrict the Production token to the exact production origin in CloudKit
-Console. Keep writes disabled until Production create/import/delete validation
-has passed. For local development, put settings in `api/local.settings.json`,
-which is ignored by Git; never copy the spike's `config.*.local.json` files into
-this repository.
+Console and set its Sign In Callback to **Post Message**, which is the mode used
+by CloudKit JS. Keep writes disabled until Production create/import/delete
+validation has passed. For local development, put settings in
+`api/local.settings.json`, which is ignored by Git; never copy the spike's
+`config.*.local.json` files into this repository.
+
+CloudKit web authentication currently fails in Safari on macOS when Safari's
+default cross-site tracking protection is enabled. The companion avoids opening
+an authentication flow that cannot complete there and keeps public search
+available; iPhone, iPad, and other supported desktop browsers can still connect
+to iCloud.
 
 Run the native-module contract tests with `npm run test:web`.
 

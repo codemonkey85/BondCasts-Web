@@ -11,4 +11,6 @@ public sealed record ResolvedPodcastResponse(
     [property: JsonPropertyName("artworkURLString")] string? ArtworkUrl,
     [property: JsonPropertyName("feedDescription")] string? FeedDescription,
     [property: JsonPropertyName("episodeCount")] int EpisodeCount,
-    [property: JsonPropertyName("itunesID")] long? ItunesId);
+    [property: JsonPropertyName("itunesID")] long? ItunesId,
+    [property: JsonPropertyName("websiteURL")]
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? WebsiteUrl);

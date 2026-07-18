@@ -92,7 +92,8 @@ public sealed class CompanionFunctions
                 feed.ArtworkUrl ?? directory?.ArtworkUrl,
                 feed.Description,
                 feed.Episodes.Count,
-                directory?.ItunesId), ct, "public, max-age=900");
+                directory?.ItunesId,
+                PodcastWebsiteUrl.FromFeed(feed.Link)), ct, "public, max-age=900");
         }
         catch (UnsafeFeedUrlException ex)
         {

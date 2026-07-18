@@ -1,7 +1,10 @@
 import { createCloudKitClient, loadCompanionConfiguration } from "./cloudkit-client.js";
+import { isMacSafari } from "./browser-support.js";
+import { createLibrarySetupPanel, createShowWebsiteLink } from "./companion-ui.js";
 import { resolvePodcast, searchPodcasts } from "./directory-client.js";
 import { CompanionError } from "./errors.js";
 import { isHTTPFeedURL, normalizeFeedURL } from "./feed-url.js";
+import { discoverFollowedShows, isLibrarySetupRequired } from "./library-connection.js";
 
 const elements = {
   form: document.getElementById("podcast-search"),
@@ -14,6 +17,9 @@ const elements = {
   inspector: document.getElementById("show-inspector"),
   iCloudCard: document.getElementById("icloud-card"),
   iCloudStatus: document.getElementById("icloud-status"),
+  iCloudOnboarding: document.getElementById("icloud-onboarding"),
+  iCloudCompatibility: document.getElementById("icloud-compatibility"),
+  appleAuthButtons: document.getElementById("apple-auth-buttons"),
   connectionDot: document.getElementById("connection-dot"),
   refreshLibrary: document.getElementById("refresh-library")
 };
@@ -171,6 +177,8 @@ function renderInspector() {
   body.append(verified);
   body.append(textElement("h2", show.title));
   body.append(textElement("p", show.author || "Author not listed", "resolved-author"));
+  const websiteLink = createShowWebsiteLink(document, show.websiteURL);
+  if (websiteLink) body.append(websiteLink);
   if (show.feedDescription) body.append(textElement("p", show.feedDescription, "resolved-description"));
 
   const facts = document.createElement("div");
@@ -179,6 +187,16 @@ function renderInspector() {
   facts.append(textElement("span", feedHostname(show.feedURL)));
   if (show.itunesID) facts.append(textElement("span", `Apple ID ${show.itunesID}`));
   body.append(facts);
+
+  if (state.cloudState === "setup-required") {
+    body.append(createLibrarySetupPanel(document, {
+      compact: true,
+      headingID: "inspector-library-setup-heading",
+      onRetry: retryLibrarySetup
+    }));
+    elements.inspector.append(body);
+    return;
+  }
 
   const following = state.followedShows.some((candidate) => candidate.normalizedFeedURL === normalizeFeedURL(show.feedURL));
   const action = document.createElement("button");
@@ -242,6 +260,12 @@ async function initializeCloudKit() {
       setCloudState("unavailable", "iCloud follow controls are not configured on this environment.");
       return;
     }
+    if (isMacSafari()) {
+      elements.appleAuthButtons.hidden = true;
+      elements.iCloudCompatibility.hidden = false;
+      setCloudState("unavailable", "iCloud sign-in is not currently available in Safari on Mac.");
+      return;
+    }
     state.cloudKitClient = await createCloudKitClient(state.cloudKitConfiguration, {
       signIn: "apple-sign-in-button",
       signOut: "apple-sign-out-button"
@@ -267,8 +291,9 @@ async function connectLibrary() {
   libraryConnectionPromise = (async () => {
     setCloudState("loading", "Checking your private BondCasts library…");
     try {
-      state.store = await state.cloudKitClient.openFollowedShowStore();
-      state.followedShows = await state.store.readAll();
+      const library = await discoverFollowedShows(state.cloudKitClient);
+      state.store = library.store;
+      state.followedShows = library.followedShows;
       setCloudState("connected", libraryCountMessage());
       elements.refreshLibrary.hidden = false;
       renderInspector();
@@ -279,6 +304,11 @@ async function connectLibrary() {
     }
   })();
   return libraryConnectionPromise;
+}
+
+async function retryLibrarySetup() {
+  if (!state.cloudKitClient || libraryConnectionPromise) return;
+  await connectLibrary();
 }
 
 async function refreshLibrary() {
@@ -312,8 +342,14 @@ function handleCloudError(error) {
     disconnectLibrary();
     return;
   }
-  const stateName = companionError.kind === "zone-unavailable" ? "attention" : "unavailable";
-  setCloudState(stateName, companionError.message);
+  if (isLibrarySetupRequired(companionError)) {
+    state.store = null;
+    state.followedShows = [];
+    elements.refreshLibrary.hidden = true;
+    setCloudState("setup-required", "BondCasts is not set up for this iCloud account yet.");
+    return;
+  }
+  setCloudState("unavailable", companionError.message);
 }
 
 function setCloudState(nextState, message) {
@@ -324,9 +360,14 @@ function setCloudState(nextState, message) {
 
 function updateCloudKitDisplay() {
   elements.iCloudStatus.textContent = state.cloudState === "connected" ? libraryCountMessage() : state.cloudMessage;
+  const setupRequired = state.cloudState === "setup-required";
+  elements.iCloudOnboarding.hidden = !setupRequired;
+  elements.iCloudOnboarding.replaceChildren(...(setupRequired
+    ? [createLibrarySetupPanel(document, { onRetry: retryLibrarySetup })]
+    : []));
   elements.connectionDot.dataset.state = state.cloudState === "connected"
     ? "connected"
-    : state.cloudState === "attention" || state.cloudState === "signed-out" ? "attention" : "";
+    : setupRequired || state.cloudState === "signed-out" ? "attention" : "";
   renderInspector();
 }
 
@@ -395,7 +436,7 @@ function preferredScrollBehavior() {
 }
 
 function focusCloudKitCard() {
-  elements.iCloudCard.scrollIntoView({ behavior: "smooth", block: "center" });
+  elements.iCloudCard.scrollIntoView({ behavior: preferredScrollBehavior(), block: "center" });
   elements.iCloudCard.setAttribute("tabindex", "-1");
   elements.iCloudCard.focus({ preventScroll: true });
 }
