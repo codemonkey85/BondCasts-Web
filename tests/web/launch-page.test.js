@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readdir, readFile } from "node:fs/promises";
 import test from "node:test";
 
-const appStoreURL = "https://apps.apple.com/us/app/bondcasts/id6787571328";
+const appStoreURL = "https://apps.apple.com/app/id6787571328";
 const repositoryRoot = new URL("../../", import.meta.url);
 const indexHTML = await readFile(new URL("index.html", repositoryRoot), "utf8");
 
@@ -15,7 +15,7 @@ test("launch page no longer advertises the beta or an upcoming launch", () => {
   assert.doesNotMatch(indexHTML, /coming (?:fall|soon)|before launch|ahead of .* launch/i);
 });
 
-test("published website has no remaining TestFlight path", async () => {
+test("published website uses only the current install path", async () => {
   const publishedSources = [
     "index.html",
     "privacy.html",
@@ -33,6 +33,11 @@ test("published website has no remaining TestFlight path", async () => {
       source,
       /testflight|fytFVhx2/i,
       `TestFlight reference remains in ${relativePath}`
+    );
+    assert.doesNotMatch(
+      source,
+      /apps\.apple\.com\/[a-z]{2}\/app\/bondcasts\/id6787571328/i,
+      `Country-specific App Store link remains in ${relativePath}`
     );
   }
 });

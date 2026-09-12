@@ -1,4 +1,4 @@
-export const BONDCASTS_INSTALL_URL = "https://apps.apple.com/us/app/bondcasts/id6787571328";
+export const BONDCASTS_INSTALL_URL = "https://apps.apple.com/app/id6787571328";
 
 export function createShowWebsiteLink(document, websiteURL) {
   const normalizedWebsiteURL = normalizeAbsoluteHTTPURL(websiteURL);
