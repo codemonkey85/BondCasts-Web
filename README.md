@@ -133,6 +133,10 @@ Other Data Types, purpose App Functionality, not linked to identity, no
 tracking. Everything else is unchanged: no third-party analytics/ad/crash
 SDKs, sync via the user's private CloudKit database (which the developer
 can't read), feeds fetched directly from podcast hosts the user chose.
+Optional personalized show suggestions are off by default, process listening
+history with Apple's on-device model, and send only constrained broad topics
+directly to Apple's public podcast directory. BondCasts services do not receive
+or retain those topics or results.
 Apple's own platform metrics (App Store + opt-in App Analytics) are Apple's
 collection, not ours.
 
