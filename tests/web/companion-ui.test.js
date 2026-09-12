@@ -44,7 +44,9 @@ test("missing-zone onboarding renders install, same-account, open-once, and retr
   assert.match(allText(panel), /Open the app once/);
 
   const install = find(panel, (element) => element.tagName === "A");
+  assert.equal(BONDCASTS_INSTALL_URL, "https://apps.apple.com/us/app/bondcasts/id6787571328");
   assert.equal(install.href, BONDCASTS_INSTALL_URL);
+  assert.equal(install.textContent, "Download on the App Store");
   assert.equal(install.target, "_blank");
   assert.equal(install.rel, "noopener noreferrer");
 
