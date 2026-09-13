@@ -39,6 +39,11 @@ test("published website uses only the current install path", async () => {
       /apps\.apple\.com\/[a-z]{2}\/app\/bondcasts\/id6787571328/i,
       `Country-specific App Store link remains in ${relativePath}`
     );
+    assert.doesNotMatch(
+      source,
+      /\baudiograms?\b|\bcreate clip\b|\bshare clips\b|\bshareable (?:video|audiogram) clip\b/i,
+      `Removed Share Clips feature remains in ${relativePath}`
+    );
   }
 });
 
