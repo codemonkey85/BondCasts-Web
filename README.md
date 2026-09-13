@@ -118,7 +118,7 @@ applinks:bondcasts.com
 
 ## TODO
 
-- [ ] Replace the App Store `href="#"` in `index.html` once the app is live.
+- [x] Link the launch CTAs in `index.html` to the App Store listing.
 - [ ] Add `assets/favicon.svg` and `assets/og-image.png`.
 - [ ] Confirm the support/privacy email addresses resolve.
 
