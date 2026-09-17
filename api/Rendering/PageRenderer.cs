@@ -89,7 +89,7 @@ public sealed partial class PageRenderer
     public string RenderFallback(string kind, string? feedUrl, string originalUrl, string? openUrl = null)
     {
         var body = new StringBuilder();
-        body.Append($"<p class=\"lede\">If you have {SiteName} installed, this link opens the {kind} right in the app. Otherwise, get {SiteName} for iPhone, iPad, Mac, and Apple Watch.</p>");
+        body.Append($"<p class=\"lede\">If you have {SiteName} installed, this link opens the {kind} right in the app. Otherwise, get {SiteName} for iPhone, iPad, and Apple Watch in the US and Canada. The Mac app is awaiting App Review.</p>");
         if (feedUrl is { Length: > 0 })
             body.Append($"<p class=\"preview-feed-line\">Podcast feed: <a href=\"{HtmlEncode(feedUrl)}\" rel=\"noopener\">{HtmlEncode(feedUrl)}</a></p>");
 
@@ -116,7 +116,7 @@ public sealed partial class PageRenderer
     {
         _ = id; // Deliberately not rendered; opaque ids should not leak into HTML.
         var body = new StringBuilder();
-        body.Append($"<p class=\"lede\">If you have {SiteName} installed, this shared {HtmlEncode(kind)} opens right in the app. Otherwise, get {SiteName} for iPhone, iPad, Mac, and Apple Watch.</p>");
+        body.Append($"<p class=\"lede\">If you have {SiteName} installed, this shared {HtmlEncode(kind)} opens right in the app. Otherwise, get {SiteName} for iPhone, iPad, and Apple Watch in the US and Canada. The Mac app is awaiting App Review.</p>");
 
         return RenderPage(
             documentTitle: $"{Capitalize(kind)} — {SiteName}",
