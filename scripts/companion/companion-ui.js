@@ -1,4 +1,4 @@
-export const BONDCASTS_INSTALL_URL = "https://testflight.apple.com/join/fytFVhx2";
+export const BONDCASTS_INSTALL_URL = "https://apps.apple.com/app/id6787571328";
 
 export function createShowWebsiteLink(document, websiteURL) {
   const normalizedWebsiteURL = normalizeAbsoluteHTTPURL(websiteURL);
@@ -55,7 +55,7 @@ export function createLibrarySetupPanel(document, options = {}) {
   install.href = BONDCASTS_INSTALL_URL;
   install.target = "_blank";
   install.rel = "noopener noreferrer";
-  install.textContent = "Install with TestFlight";
+  install.textContent = "Download on the App Store";
 
   const retry = document.createElement("button");
   retry.type = "button";
